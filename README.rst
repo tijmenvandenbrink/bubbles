@@ -18,7 +18,7 @@ Create a virtualenv and clone from github
 
     ::
 
-        virtualenv blubbles-venv
+        virtualenv bubbles-venv
         git clone git://github.com/tijmenvandenbrink/bubbles.git
 
         source bubbles-venv/bin/activate
