@@ -14,6 +14,8 @@ logs/
 ##################
 _surf_*
 surf_syncdb_idd.py
+bubbles.db
+local.py
 
 # OS generated files #
 ######################
