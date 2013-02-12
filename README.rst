@@ -24,9 +24,21 @@ Create a virtualenv and clone from github
         source bubbles-venv/bin/activate
         pip install -r bubbles/requirements/requirements.txt
 
+Syncdb
+----------------------------------
+
+Sync the database with the local settings file
+
+    ::
+
+        django-admin.py syncdb --settings=bubbles.settings.local --pythonpath=<your project path>
+        django-admin.py migrate --settings=bubbles.settings.local --pythonpath=<your project path>
+
+
 Run
 =====
 
     ::
 
+        django-admin runserver 8000 --settings=bubbles.settings.local --pythonpath=<your project path>
 
