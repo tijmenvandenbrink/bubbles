@@ -94,10 +94,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'surfnet.urls'
+ROOT_URLCONF = 'bubbles.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'surfnet.wsgi.application'
+WSGI_APPLICATION = 'bubbles.wsgi.application'
 
 INSTALLED_APPS = (
     'django.contrib.auth',

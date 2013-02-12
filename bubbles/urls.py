@@ -7,8 +7,8 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
                        # Examples:
-                       # url(r'^$', 'surfnet.views.home', name='home'),
-                       # url(r'^surfnet/', include('surfnet.foo.urls')),
+                       # url(r'^$', 'bubbles.views.home', name='home'),
+                       # url(r'^bubbles/', include('bubbles.foo.urls')),
 
                        # Uncomment the admin/doc line below to enable admin documentation:
                        # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

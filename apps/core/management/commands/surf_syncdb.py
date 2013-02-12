@@ -104,4 +104,4 @@ class Command(BaseCommand):
             import pdb
 
             pdb.set_trace()
-            raise CommandError('Syncing the database with surfnet idd was unsuccessful')
+            raise CommandError('Syncing the database with bubbles idd was unsuccessful')
