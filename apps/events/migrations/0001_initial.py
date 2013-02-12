@@ -7,10 +7,27 @@ from django.db import models
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
+        # Adding model 'EventClass'
+        db.create_table('events_eventclass', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=75)),
+            ('parent', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['events.EventClass'])),
+        ))
+        db.send_create_signal('events', ['EventClass'])
+
+        # Adding model 'EventSeverity'
+        db.create_table('events_eventseverity', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=25)),
+            ('conversion', self.gf('django.db.models.fields.IntegerField')()),
+        ))
+        db.send_create_signal('events', ['EventSeverity'])
+
         # Adding model 'Event'
         db.create_table('events_event', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('event_class', self.gf('django.db.models.fields.CharField')(max_length=75)),
+            ('event_class', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['events.EventClass'])),
+            ('severity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['events.EventSeverity'])),
             ('description', self.gf('django.db.models.fields.CharField')(max_length=100, blank=True)),
             ('start', self.gf('django.db.models.fields.DateTimeField')()),
             ('end', self.gf('django.db.models.fields.DateTimeField')()),
@@ -20,6 +37,12 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
+        # Deleting model 'EventClass'
+        db.delete_table('events_eventclass')
+
+        # Deleting model 'EventSeverity'
+        db.delete_table('events_eventseverity')
+
         # Deleting model 'Event'
         db.delete_table('events_event')
 
@@ -37,10 +60,23 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Event'},
             'description': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
-            'event_class': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'event_class': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['events.EventClass']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'service': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.Service']"}),
+            'severity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['events.EventSeverity']"}),
             'start': ('django.db.models.fields.DateTimeField', [], {})
+        },
+        'events.eventclass': {
+            'Meta': {'object_name': 'EventClass'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
+            'parent': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['events.EventClass']"})
+        },
+        'events.eventseverity': {
+            'Meta': {'object_name': 'EventSeverity'},
+            'conversion': ('django.db.models.fields.IntegerField', [], {}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '25'})
         },
         'organizations.organization': {
             'Meta': {'object_name': 'Organization'},
@@ -57,13 +93,13 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'organization': (
-                'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
+            'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
+            'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),
             'sub_services': ('django.db.models.fields.related.ManyToManyField', [],
                              {'blank': 'True', 'related_name': "'sub_services_rel_+'", 'null': 'True',
-                              'to': "orm['services.Service']"}),
-            'type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"})
+                              'to': "orm['services.Service']"})
         },
         'services.servicestatus': {
             'Meta': {'object_name': 'ServiceStatus'},

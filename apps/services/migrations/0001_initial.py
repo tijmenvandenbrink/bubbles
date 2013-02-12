@@ -30,7 +30,7 @@ class Migration(SchemaMigration):
             ('organization',
              self.gf('django.db.models.fields.related.ForeignKey')(to=orm['organizations.Organization'])),
             ('service_id', self.gf('django.db.models.fields.CharField')(unique=True, max_length=25)),
-            ('type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceType'])),
+            ('service_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceType'])),
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceStatus'])),
             ('cir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
             ('eir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
@@ -84,13 +84,13 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'organization': (
-                'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
+            'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
+            'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),
             'sub_services': ('django.db.models.fields.related.ManyToManyField', [],
                              {'blank': 'True', 'related_name': "'sub_services_rel_+'", 'null': 'True',
-                              'to': "orm['services.Service']"}),
-            'type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"})
+                              'to': "orm['services.Service']"})
         },
         'services.servicestatus': {
             'Meta': {'object_name': 'ServiceStatus'},

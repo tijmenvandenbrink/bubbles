@@ -71,10 +71,9 @@ class Command(BaseCommand):
                 org.save()
                 return org
 
-        try:
-            data = SurfSoap(GETINTERFACELIST_URL, INT_IDD_BACKUP).getdata()
-        except:
-            raise CommandError('Unable to connect to IDD...')
+        data = SurfSoap(GETINTERFACELIST_URL, INT_IDD_BACKUP).getdata()
+        #except:
+        #    raise CommandError('Unable to connect to IDD...')
 
         for klant in data.keys():
             for service in data[klant].keys():
@@ -85,7 +84,7 @@ class Command(BaseCommand):
                                       description=obj['omschrijving'],
                                       organization=org,
                                       service_id=obj['int_id'],
-                                      type=ServiceType.objects.get(name='IP Interface'),
+                                      service_type=ServiceType.objects.get(name='IP Interface'),
                                       status=ServiceStatus.objects.get(name='Production'),
                                       cir=0,
                                       eir=obj['capaciteit_1'])
@@ -96,11 +95,11 @@ class Command(BaseCommand):
                                       description=obj['omschrijving'],
                                       organization=org,
                                       service_id=obj['service_id'],
-                                      type=ServiceType.objects.get(name='Dynamic LP (Resilient)'),
+                                      service_type=ServiceType.objects.get(name='Dynamic LP (Resilient)'),
                                       status=ServiceStatus.objects.get(name='Production'),
                                       cir=obj['capaciteit_prov'],
                                       eir=obj['capaciteit_kv'])
                     service.save()
                 else:
                     continue
-        self.stdout.write('Successfully synced database')
+        self.stdout.write('Successfully synced database\n')
