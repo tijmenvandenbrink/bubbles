@@ -13,6 +13,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        # Fixture for adding Service types
         SERVICE_TYPE_CHOICES = (
             # Customer service types
             ('sipu', 'Static IP Unprotected (VRRP)'),
@@ -37,6 +38,7 @@ class Command(BaseCommand):
             ('unknown', 'Unknown')
         )
 
+        # Fixture for adding Service types
         SERVICE_STATUS_CHOICES = (
             ('Production', 1000),
             ('Pre-production', 500),
@@ -46,62 +48,59 @@ class Command(BaseCommand):
             ('Decommisioned', -1),
         )
 
+        for k, v in SERVICE_TYPE_CHOICES:
+            try:
+                ServiceType.objects.get(name=v)
+            except ServiceType.DoesNotExist:
+                servicetype = ServiceType(name=v)
+                servicetype.save()
+
+        for k, v in SERVICE_STATUS_CHOICES:
+            try:
+                ServiceStatus.objects.get(name=k)
+            except ServiceStatus.DoesNotExist:
+                servicestatus = ServiceStatus(name=k, conversion=v)
+                servicestatus.save()
+
+        def _add_or_get_organization(klant_id):
+            try:
+                org = Organization.objects.get(org_id=klant_id)
+                return org
+            except Organization.DoesNotExist:
+                org = Organization(name=klant, org_id=klant_id, org_abbreviation=obj['klantafkorting'])
+                org.save()
+                return org
+
         try:
-            for k, v in SERVICE_TYPE_CHOICES:
-                try:
-                    ServiceType.objects.get(name=v)
-                except ServiceType.DoesNotExist:
-                    servicetype = ServiceType(name=v)
-                    servicetype.save()
-
-            for k, v in SERVICE_STATUS_CHOICES:
-                try:
-                    ServiceStatus.objects.get(name=k)
-                except ServiceStatus.DoesNotExist:
-                    servicestatus = ServiceStatus(name=k, conversion=v)
-                    servicestatus.save()
-
-            def _add_or_get_organization(klant_id):
-                try:
-                    org = Organization.objects.get(org_id=klant_id)
-                    return org
-                except Organization.DoesNotExist:
-                    org = Organization(name=klant, org_id=klant_id, org_abbreviation=obj['klantafkorting'])
-                    org.save()
-                    return org
-
             data = SurfSoap(GETINTERFACELIST_URL, INT_IDD_BACKUP).getdata()
-
-            for klant in data.keys():
-                for service in data[klant].keys():
-                    obj = data[klant][service]
-                    if 'klant_id' in obj and 'int_id' in obj:
-                        org = _add_or_get_organization(obj['klant_id'])
-                        service = Service(name=obj['interfacenaam'],
-                                          description=obj['omschrijving'],
-                                          organization=org,
-                                          service_id=obj['int_id'],
-                                          type=ServiceType.objects.get(name='IP Interface'),
-                                          status=ServiceStatus.objects.get(name='Production'),
-                                          cir=0,
-                                          eir=obj['capaciteit_1'])
-                        service.save()
-                    elif 'klantid' in obj and 'service_id' in obj:
-                        org = _add_or_get_organization(obj['klantid'])
-                        service = Service(name=obj['service_id'],
-                                          description=obj['omschrijving'],
-                                          organization=org,
-                                          service_id=obj['service_id'],
-                                          type=ServiceType.objects.get(name='Dynamic LP (Resilient)'),
-                                          status=ServiceStatus.objects.get(name='Production'),
-                                          cir=obj['capaciteit_prov'],
-                                          eir=obj['capaciteit_kv'])
-                        service.save()
-                    else:
-                        continue
-            self.stdout.write('Successfully synced database')
         except:
-            import pdb
+            raise CommandError('Unable to connect to IDD...')
 
-            pdb.set_trace()
-            raise CommandError('Syncing the database with bubbles idd was unsuccessful')
+        for klant in data.keys():
+            for service in data[klant].keys():
+                obj = data[klant][service]
+                if 'klant_id' in obj and 'int_id' in obj:
+                    org = _add_or_get_organization(obj['klant_id'])
+                    service = Service(name=obj['interfacenaam'],
+                                      description=obj['omschrijving'],
+                                      organization=org,
+                                      service_id=obj['int_id'],
+                                      type=ServiceType.objects.get(name='IP Interface'),
+                                      status=ServiceStatus.objects.get(name='Production'),
+                                      cir=0,
+                                      eir=obj['capaciteit_1'])
+                    service.save()
+                elif 'klantid' in obj and 'service_id' in obj:
+                    org = _add_or_get_organization(obj['klantid'])
+                    service = Service(name=obj['service_id'],
+                                      description=obj['omschrijving'],
+                                      organization=org,
+                                      service_id=obj['service_id'],
+                                      type=ServiceType.objects.get(name='Dynamic LP (Resilient)'),
+                                      status=ServiceStatus.objects.get(name='Production'),
+                                      cir=obj['capaciteit_prov'],
+                                      eir=obj['capaciteit_kv'])
+                    service.save()
+                else:
+                    continue
+        self.stdout.write('Successfully synced database')

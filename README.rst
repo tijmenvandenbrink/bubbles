@@ -24,13 +24,6 @@ Create a virtualenv and clone from github
         source bubbles-venv/bin/activate
         pip install -r bubbles/requirements/requirements.txt
 
-Setting up environment variables
-
-    ::
-        The following environment variables are needed to properly start this project
-
-        -
-
 Syncdb
 ----------------------------------
 
