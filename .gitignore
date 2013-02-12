@@ -1,0 +1,24 @@
+# File types #
+##############
+*.pyc
+*.swo
+*.swp
+*.swn
+
+# Directories #
+###############
+logs/
+.idea/
+
+# SURFnet Specific files #
+##################
+_surf_*
+surf_syncdb_idd.py
+
+# OS generated files #
+######################
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+*~
