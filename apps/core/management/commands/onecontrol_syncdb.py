@@ -1,13 +1,11 @@
 import MySQLdb as mdb
-from datetime import date
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
 from apps.devices.models import Device
 from apps.components.models import Component
-from apps.services.models import Service
 from apps.statistics.models import DataSource, DataPoint
 from apps.core.management.commands._surf_settings import *
 from apps.core.utils import mkdate, get_derived_value
@@ -230,7 +228,7 @@ class Command(BaseCommand):
             "type can be: port_volume, service_volume"
             "date format: YYYY-MM-DD ")
 
-    def handle(self, period=date.today(), *args, **options):
+    def handle(self, period, *args, **options):
         sync_devices()
         logger.info('Synced devices from OneControl with Bubbles')
 
