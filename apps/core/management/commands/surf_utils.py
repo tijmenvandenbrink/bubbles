@@ -1,12 +1,14 @@
 from time import time
 import cPickle as pickle
 import sys
-import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     from SOAPpy import Client
 except ImportError:
-    sys.stderr.write("Could not import SOAPpy")
+    logger.critical("Could not import SOAPpy. Exiting...")
     sys.exit(0)
 
 
