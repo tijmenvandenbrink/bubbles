@@ -31,7 +31,13 @@ class Migration(SchemaMigration):
             ('description', self.gf('django.db.models.fields.CharField')(max_length=100, blank=True)),
             ('start', self.gf('django.db.models.fields.DateTimeField')()),
             ('end', self.gf('django.db.models.fields.DateTimeField')()),
-            ('service', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'])),
+            ('service',
+             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], null=True, blank=True)),
+            ('device',
+             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['devices.Device'], null=True, blank=True)),
+            ('component',
+             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['components.Component'], null=True,
+                                                                   blank=True)),
         ))
         db.send_create_signal('events', ['Event'])
 
@@ -48,6 +54,15 @@ class Migration(SchemaMigration):
 
 
     models = {
+        'components.component': {
+            'Meta': {'object_name': 'Component'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['devices.Device']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'speed': ('django.db.models.fields.BigIntegerField', [], {})
+        },
         'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
                      'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -56,13 +71,29 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
+        'devices.device': {
+            'Meta': {'object_name': 'Device'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device_type': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ip': ('django.db.models.fields.IPAddressField', [], {'max_length': '15'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'software_version': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'system_node_key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
+        },
         'events.event': {
             'Meta': {'object_name': 'Event'},
+            'component': ('django.db.models.fields.related.ForeignKey', [],
+                          {'to': "orm['components.Component']", 'null': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
+            'device': ('django.db.models.fields.related.ForeignKey', [],
+                       {'to': "orm['devices.Device']", 'null': 'True', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             'event_class': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['events.EventClass']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'service': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.Service']"}),
+            'service': ('django.db.models.fields.related.ForeignKey', [],
+                        {'to': "orm['services.Service']", 'null': 'True', 'blank': 'True'}),
             'severity': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['events.EventSeverity']"}),
             'start': ('django.db.models.fields.DateTimeField', [], {})
         },
@@ -88,12 +119,14 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'organization': (
-            'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
+            'organization': ('django.db.models.fields.related.ManyToManyField', [],
+                             {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
             'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),

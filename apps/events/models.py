@@ -2,7 +2,9 @@ from django.db import models
 
 from taggit.managers import TaggableManager
 
-from apps.services.models import Service
+from ..components.models import Component
+from ..devices.models import Device
+from ..services.models import Service
 
 
 class EventClass(models.Model):
@@ -13,7 +15,7 @@ class EventClass(models.Model):
         verbose_name_plural = "Event classes"
 
     def __unicode__(self):
-        return "%s" % self.name
+        return "{0}".format(self.name)
 
 
 class EventSeverity(models.Model):
@@ -24,7 +26,7 @@ class EventSeverity(models.Model):
         verbose_name_plural = "Event severities"
 
     def __unicode__(self):
-        return "%s (%s)" % (self.name, self.conversion)
+        return "{0} ({1})".format(self.name, self.conversion)
 
 
 class Event(models.Model):
@@ -33,8 +35,10 @@ class Event(models.Model):
     description = models.CharField(max_length=100, blank=True)
     start = models.DateTimeField()
     end = models.DateTimeField()
-    service = models.ForeignKey(Service)
+    service = models.ForeignKey(Service, blank=True, null=True)
+    device = models.ForeignKey(Device, blank=True, null=True)
+    component = models.ForeignKey(Component, blank=True, null=True)
     tags = TaggableManager()
 
     def __unicode__(self):
-        return "%s (%s - %s)" % (self.description, self.start, self.end)
+        return "{0} ({1} - {2})".format(self.description, self.start, self.end)

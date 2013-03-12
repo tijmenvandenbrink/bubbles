@@ -2,7 +2,10 @@ from django.db import models
 
 from taggit.managers import TaggableManager
 
+from apps.components.models import Component
+from apps.devices.models import Device
 from apps.services.models import Service
+
 
 # GAUGE
 # is for things like temperatures or number of people in a room or the value of a RedHat share.
@@ -51,13 +54,26 @@ DATA_TYPES = (
 
 
 class DataSource(models.Model):
-    name = models.CharField(max_length=50)
+    """
+    :param name: Name of the datasource
+    :type name: CharField
+    :param description: Description of the datasource
+    :type description: TextField
+    :param unit: Unit of the datasource
+    :type unit: CharField
+    :param data_type: Type of data this datasource will hold (e.g. Absolute, Gauge, Derive, Counter)
+    :type data_type: CharField
+    :param interval: The collection interval of the datapoints.
+    :type interval: PositiveIntegerField
+    """
+    name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
     unit = models.CharField(max_length=20)
     data_type = models.CharField(max_length=20, choices=DATA_TYPES)
+    interval = models.PositiveIntegerField()
 
     def __unicode__(self):
-        return "%s" % self.name
+        return "{0}".format(self.name)
 
 
 class DataPoint(models.Model):
@@ -65,8 +81,10 @@ class DataPoint(models.Model):
     end = models.DateTimeField()
     value = models.BigIntegerField()
     service = models.ForeignKey(Service, blank=True, null=True)
+    device = models.ForeignKey(Device, blank=True, null=True)
+    component = models.ForeignKey(Component, blank=True, null=True)
     data_source = models.ForeignKey(DataSource)
     tags = TaggableManager()
 
     def __unicode__(self):
-        return "[%s - %s] %s" % (self.start, self.end, self.value)
+        return "[{0} - {1}] {2}".format(self.start, self.end, self.value)

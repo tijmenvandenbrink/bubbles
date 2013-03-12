@@ -3,7 +3,7 @@ from apps.services.models import Service, ServiceStatus, ServiceType
 
 
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'organization', 'service_type', 'cir', 'eir')
+    list_display = ('name', 'description', 'service_type', 'cir', 'eir')
     list_filter = ('organization', 'service_type')
     search_fields = ('name', 'description')
 

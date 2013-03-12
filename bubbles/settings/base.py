@@ -113,7 +113,9 @@ INSTALLED_APPS = (
     # third party apps
     'south',
     # project apps
+    'apps.components',
     'apps.core',
+    'apps.devices',
     'apps.organizations',
     'apps.events',
     'apps.services',

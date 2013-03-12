@@ -25,10 +25,10 @@ class Migration(SchemaMigration):
         # Adding model 'Service'
         db.create_table('services_service', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('last_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=200)),
             ('description', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('organization',
-             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['organizations.Organization'])),
             ('service_id', self.gf('django.db.models.fields.CharField')(unique=True, max_length=25)),
             ('service_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceType'])),
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceStatus'])),
@@ -36,6 +36,14 @@ class Migration(SchemaMigration):
             ('eir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
         ))
         db.send_create_signal('services', ['Service'])
+
+        # Adding M2M table for field organization on 'Service'
+        db.create_table('services_service_organization', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('service', models.ForeignKey(orm['services.service'], null=False)),
+            ('organization', models.ForeignKey(orm['organizations.organization'], null=False))
+        ))
+        db.create_unique('services_service_organization', ['service_id', 'organization_id'])
 
         # Adding M2M table for field sub_services on 'Service'
         db.create_table('services_service_sub_services', (
@@ -55,6 +63,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Service'
         db.delete_table('services_service')
+
+        # Removing M2M table for field organization on 'Service'
+        db.delete_table('services_service_organization')
 
         # Removing M2M table for field sub_services on 'Service'
         db.delete_table('services_service_sub_services')
@@ -79,12 +90,14 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'organization': (
-            'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
+            'organization': ('django.db.models.fields.related.ManyToManyField', [],
+                             {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
             'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),

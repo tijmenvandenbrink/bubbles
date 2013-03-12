@@ -42,3 +42,74 @@ Run
 
         django-admin runserver 8000 --settings=bubbles.settings.generic --pythonpath=<your project path>
 
+
+
+================================
+Services
+================================
+
+Service Types
+=====
+
+  * Customer Services
+  * * EPL (Single service port)
+  * * EVPL (Multiple services port)
+  * * ELAN
+
+  * Core Services
+  * * PBT TUNNELS
+
+================================
+Devices
+================================
+
+  * DEVICE -> Get information from SystemNode table in OneControl database
+
+================================
+Components
+================================
+
+Component Types
+======
+
+  * INTERFACES (UUID: DEVICE MAC + PORTFORMALNAME)
+  * AGGREGATES (UUID: DEVICE MAC + PORTFORMALNAME)
+
+================================
+Reporting
+================================
+
+Report Types
+======
+
+  SHORT TERM
+
+  * Port/Service Volume Reporting (Monthly)
+  * Service Availability Reporting (Monthly)
+
+  ROADMAP
+
+  * Service Y1731 Reporting (Monthly)
+
+  What do we have to play with?
+  * ESMDB
+  * * PORTSTATS TABLE
+  * * SERVICEENDPOINTSTATS TABLE
+  * * PolledData TABLE
+  * * SystemNode TABLE
+
+
+================================
+Commands
+================================
+
+Sync with SURFnet Customer Database
+======
+
+django-admin.py surf_syncdb --settings=bubbles.settings.local --pythonpath=<your project path>
+
+
+Sync with Ciena OneControl
+======
+
+django-admin.py onecontrol_syncdb YYYY-MM-DD --settings=bubbles.settings.local --pythonpath=<your project path>

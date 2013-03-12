@@ -1,10 +1,59 @@
+import logging
+
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.organizations.models import Organization
 from apps.services.models import Service, ServiceType, ServiceStatus
 
-from apps.core.management.commands._surf_utils import SurfSoap
+from apps.core.management.commands.surf_utils import SurfSoap
 from apps.core.management.commands._surf_settings import *
+
+logger = logging.getLogger(__name__)
+
+
+def sync_objects(data):
+    for klant in data.keys():
+        for service_id in data[klant].keys():
+            obj = data[klant][service_id]
+            logger.debug("RAW object from idd: {}".format(obj))
+            if 'klant_id' in obj and 'int_id' in obj:
+                org, created = Organization.objects.get_or_create(org_id=obj['klant_id'],
+                                                                  defaults={'name': obj['klantnaam'],
+                                                                            'org_abbreviation': obj['klantafkorting']})
+
+                service, created = Service.objects.get_or_create(service_id=obj['int_id'],
+                                                                 defaults={'name': obj['interfacenaam'],
+                                                                           'description': obj['omschrijving'],
+                                                                           'service_type': ServiceType.objects.get(
+                                                                               name='IP Interface'),
+                                                                           'status': ServiceStatus.objects.get(
+                                                                               name='Production'),
+                                                                           'cir': 0,
+                                                                           'eir': obj['capaciteit_1']})
+                service.organization.add(org)
+            elif 'klantid' in obj and 'service_id' in obj:
+                org, created = Organization.objects.get_or_create(org_id=obj['klantid'],
+                                                                  defaults={'name': obj['klantnaam'],
+                                                                            'org_abbreviation': obj['klantafkorting']})
+
+                service, created = Service.objects.get_or_create(service_id=obj['service_id'],
+                                                                 defaults={'name': obj['service_id'],
+                                                                           'description': obj['omschrijving'],
+                                                                           'service_type': ServiceType.objects.get(
+                                                                               name='LP Interface'),
+                                                                           'status': ServiceStatus.objects.get(
+                                                                               name='Production'),
+                                                                           'cir': obj['capaciteit_prov'],
+                                                                           'eir': obj['capaciteit_kv']})
+                service.organization.add(org)
+            else:
+                logger.error("We found a strange object in IDD: {}".format(obj))
+                continue
+
+            if created:
+                logger.info("Created service: {}".format(service))
+            elif not created:
+                logger.info("Service already exists: {}".format(service))
 
 
 class Command(BaseCommand):
@@ -27,6 +76,7 @@ class Command(BaseCommand):
             ('dlpp', 'Dynamic LP (Protected)'),
             ('dlpr', 'Dynamic LP (Resilient)'),
             ('ip', 'IP Interface'),
+            ('lp', 'LP Interface'),
             # Tunnel types
             ('tu', 'Tunnel Unprotected'),
             ('tp', 'Tunnel Protected'),
@@ -49,57 +99,13 @@ class Command(BaseCommand):
         )
 
         for k, v in SERVICE_TYPE_CHOICES:
-            try:
-                ServiceType.objects.get(name=v)
-            except ServiceType.DoesNotExist:
-                servicetype = ServiceType(name=v)
-                servicetype.save()
+            ServiceType.objects.get_or_create(name=v)
 
         for k, v in SERVICE_STATUS_CHOICES:
-            try:
-                ServiceStatus.objects.get(name=k)
-            except ServiceStatus.DoesNotExist:
-                servicestatus = ServiceStatus(name=k, conversion=v)
-                servicestatus.save()
+            ServiceStatus.objects.get_or_create(name=k, conversion=v)
 
-        def _add_or_get_organization(klant_id):
-            try:
-                org = Organization.objects.get(org_id=klant_id)
-                return org
-            except Organization.DoesNotExist:
-                org = Organization(name=klant, org_id=klant_id, org_abbreviation=obj['klantafkorting'])
-                org.save()
-                return org
+        for k, v in IDD_URLS.items():
+            data = SurfSoap(v['url'], v['backup_file'], k).getdata()
+            sync_objects(data)
 
-        data = SurfSoap(GETINTERFACELIST_URL, INT_IDD_BACKUP).getdata()
-        #except:
-        #    raise CommandError('Unable to connect to IDD...')
-
-        for klant in data.keys():
-            for service in data[klant].keys():
-                obj = data[klant][service]
-                if 'klant_id' in obj and 'int_id' in obj:
-                    org = _add_or_get_organization(obj['klant_id'])
-                    service = Service(name=obj['interfacenaam'],
-                                      description=obj['omschrijving'],
-                                      organization=org,
-                                      service_id=obj['int_id'],
-                                      service_type=ServiceType.objects.get(name='IP Interface'),
-                                      status=ServiceStatus.objects.get(name='Production'),
-                                      cir=0,
-                                      eir=obj['capaciteit_1'])
-                    service.save()
-                elif 'klantid' in obj and 'service_id' in obj:
-                    org = _add_or_get_organization(obj['klantid'])
-                    service = Service(name=obj['service_id'],
-                                      description=obj['omschrijving'],
-                                      organization=org,
-                                      service_id=obj['service_id'],
-                                      service_type=ServiceType.objects.get(name='Dynamic LP (Resilient)'),
-                                      status=ServiceStatus.objects.get(name='Production'),
-                                      cir=obj['capaciteit_prov'],
-                                      eir=obj['capaciteit_kv'])
-                    service.save()
-                else:
-                    continue
-        self.stdout.write('Successfully synced database\n')
+    logger.info('Successfully synced database')

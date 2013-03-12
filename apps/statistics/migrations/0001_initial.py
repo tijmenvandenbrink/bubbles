@@ -10,10 +10,11 @@ class Migration(SchemaMigration):
         # Adding model 'DataSource'
         db.create_table('statistics_datasource', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=50)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
             ('description', self.gf('django.db.models.fields.TextField')()),
             ('unit', self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('data_type', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('interval', self.gf('django.db.models.fields.PositiveIntegerField')()),
         ))
         db.send_create_signal('statistics', ['DataSource'])
 
@@ -25,6 +26,11 @@ class Migration(SchemaMigration):
             ('value', self.gf('django.db.models.fields.BigIntegerField')()),
             ('service',
              self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], null=True, blank=True)),
+            ('device',
+             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['devices.Device'], null=True, blank=True)),
+            ('component',
+             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['components.Component'], null=True,
+                                                                   blank=True)),
             ('data_source', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['statistics.DataSource'])),
         ))
         db.send_create_signal('statistics', ['DataPoint'])
@@ -39,6 +45,15 @@ class Migration(SchemaMigration):
 
 
     models = {
+        'components.component': {
+            'Meta': {'object_name': 'Component'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['devices.Device']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'speed': ('django.db.models.fields.BigIntegerField', [], {})
+        },
         'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
                      'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -46,6 +61,17 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        'devices.device': {
+            'Meta': {'object_name': 'Device'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device_type': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ip': ('django.db.models.fields.IPAddressField', [], {'max_length': '15'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'software_version': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'system_node_key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         'organizations.organization': {
             'Meta': {'object_name': 'Organization'},
@@ -57,12 +83,14 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'organization': (
-            'django.db.models.fields.related.ForeignKey', [], {'to': "orm['organizations.Organization']"}),
+            'organization': ('django.db.models.fields.related.ManyToManyField', [],
+                             {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
             'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),
@@ -83,7 +111,11 @@ class Migration(SchemaMigration):
         },
         'statistics.datapoint': {
             'Meta': {'object_name': 'DataPoint'},
+            'component': ('django.db.models.fields.related.ForeignKey', [],
+                          {'to': "orm['components.Component']", 'null': 'True', 'blank': 'True'}),
             'data_source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['statistics.DataSource']"}),
+            'device': ('django.db.models.fields.related.ForeignKey', [],
+                       {'to': "orm['devices.Device']", 'null': 'True', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'service': ('django.db.models.fields.related.ForeignKey', [],
@@ -96,7 +128,8 @@ class Migration(SchemaMigration):
             'data_type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'description': ('django.db.models.fields.TextField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'interval': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
             'unit': ('django.db.models.fields.CharField', [], {'max_length': '20'})
         },
         'taggit.tag': {
