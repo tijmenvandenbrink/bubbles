@@ -3,6 +3,8 @@ SOAPpy==0.12.5
 South==0.7.6
 Unipath==0.2.1
 argparse==1.2.1
+django-taggit==0.9.3
 fpconst==0.7.2
+suds==0.4
 wsgiref==0.1.2
 wstools==0.4

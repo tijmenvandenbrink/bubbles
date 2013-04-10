@@ -61,7 +61,8 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'speed': ('django.db.models.fields.BigIntegerField', [], {})
+            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
         'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
@@ -127,6 +128,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'organization': ('django.db.models.fields.related.ManyToManyField', [],
                              {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
+            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
             'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),

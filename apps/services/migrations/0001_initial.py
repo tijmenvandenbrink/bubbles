@@ -34,6 +34,7 @@ class Migration(SchemaMigration):
             ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceStatus'])),
             ('cir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
             ('eir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
+            ('report_on', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal('services', ['Service'])
 
@@ -98,6 +99,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'organization': ('django.db.models.fields.related.ManyToManyField', [],
                              {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
+            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
             'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
             'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),

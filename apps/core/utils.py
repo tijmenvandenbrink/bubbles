@@ -64,5 +64,10 @@ def mkdate(datestring):
         :returns: datetime object
     """
     from datetime import datetime
+    from django.utils.timezone import utc
+    import re
 
-    return datetime.strptime(datestring, '%Y-%m-%d')
+    if re.match('\d{4}-\d{1,2}-{1,2}', datestring):
+        return datetime.strptime(datestring, '%Y-%m-%d').replace(tzinfo=utc)
+    elif re.match('\d{4}-\d{1,2}', datestring):
+        return datetime.strptime(datestring, '%Y-%m').replace(tzinfo=utc)

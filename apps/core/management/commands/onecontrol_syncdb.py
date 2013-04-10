@@ -140,8 +140,6 @@ def get_port_volume(period):
 
     def _run():
         """ Runs the port volume sync """
-        # todo: Add DataSource if it doesn't exist.
-
         datasources = {'portRxBytes': {'description': 'Received bytes',
                                        'unit': 'bytes',
                                        'data_type': 'derive',

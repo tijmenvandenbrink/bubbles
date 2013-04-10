@@ -29,7 +29,8 @@ def sync_objects(data):
                                                                            'status': ServiceStatus.objects.get(
                                                                                name='Production'),
                                                                            'cir': 0,
-                                                                           'eir': obj['capaciteit_1']})
+                                                                           'eir': obj['capaciteit_1'],
+                                                                           'report_on': True})
                 service.organization.add(org)
             elif 'klantid' in obj and 'service_id' in obj:
                 org, created = Organization.objects.get_or_create(org_id=obj['klantid'],
@@ -44,7 +45,8 @@ def sync_objects(data):
                                                                            'status': ServiceStatus.objects.get(
                                                                                name='Production'),
                                                                            'cir': obj['capaciteit_prov'],
-                                                                           'eir': obj['capaciteit_kv']})
+                                                                           'eir': obj['capaciteit_kv'],
+                                                                           'report_on': True})
                 service.organization.add(org)
             else:
                 logger.error("We found a strange object in IDD: {}".format(obj))

@@ -34,6 +34,7 @@ class Service(Timestamped):
     status = models.ForeignKey(ServiceStatus)
     cir = models.BigIntegerField(null=True, blank=True)
     eir = models.BigIntegerField(null=True, blank=True)
+    report_on = models.BooleanField(default=False)
     tags = TaggableManager()
 
     def __unicode__(self):
