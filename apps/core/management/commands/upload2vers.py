@@ -104,7 +104,7 @@ def upload_volume_stats(action, period, service_type):
                                                                     period.month))
         for dp in datapoints:
             if not 'total' in dp:
-                logger.debug("No total found: {}".format(dp))
+                logger.warning("No total found: {}".format(dp))
                 continue
 
             client = VersClient(wsdl_url=VERS_WSDL_URLS[service_type]['url'])
@@ -133,9 +133,9 @@ def upload_volume_stats(action, period, service_type):
                   "NLIX": "Netherlands Internet Exchange"}
 
         for group in groups.keys():
-            logger.debug("Fetching datapoints of datasource: {} for group {} in {}-{}".format(metric, group,
-                                                                                              period.year,
-                                                                                              period.month))
+            logger.debug("Fetching datapoints of datasource: '{}' for group {} in {}-{}".format(metric, group,
+                                                                                                period.year,
+                                                                                                period.month))
             dp = DataPoint.objects.filter(data_source__name=metric,
                                           start__gte=datetime(period.year, period.month, 1).replace(tzinfo=utc),
                                           end__lte=datetime(period.year, period.month,
@@ -147,7 +147,7 @@ def upload_volume_stats(action, period, service_type):
             ).aggregate(total=Sum('value'))
 
             if not dp['total']:
-                logger.debug("No total found for datasource: '{}', for group: {} in {}-{}".format(metric, group,
+                logger.error("No total found for datasource: '{}', for group: {} in {}-{}".format(metric, group,
                                                                                                   period.year,
                                                                                                   period.month))
                 continue

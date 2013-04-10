@@ -44,8 +44,9 @@ def sync_devices():
 
     for row in rows:
         try:
-            device, created = Device.objects.get_or_create(name=row[2], system_node_key=row[0], device_type=row[1],
-                                                           ip=row[3], software_version=row[4])
+            device, created = Device.objects.get_or_create(system_node_key=row[0],
+                                                           defaults={'ip': row[3], 'software_version': row[4],
+                                                                     'device_type': row[1], 'name': row[2]})
             if created is True:
                 logger.info('Created new device: name={0.name}, system_node_key={0.system_node_key}, '
                             'device_type={0.device_type}, ip={0.ip}, '
