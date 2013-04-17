@@ -93,7 +93,7 @@ def get_port_volume(period):
                  'FROM '
                  'PORTSTATS{0} '
                  'INNER JOIN '
-                 'PolledData ON PORTSTATS{0}.MACADDRESS = PolledData.AGENT '
+                 'PolledData ON {0}.MACADDRESS = PolledData.AGENT '
                  'AND {0}.POLLID = PolledData.ID '
                  'AND PolledData.NAME = "{1}"').format(table, metric)
         return query
