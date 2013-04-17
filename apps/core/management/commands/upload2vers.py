@@ -55,7 +55,7 @@ class VersClient():
 
         for key, value in kwargs.items():
             # set attributes, but don't reset explicit ones.
-            if not hasattr(parameters, key):
+            if hasattr(parameters, key):
                 logger.debug("setting {} to {}".format(key, value))
                 setattr(parameters, key, value)
 
@@ -66,7 +66,7 @@ class VersClient():
 
         for key, value in kwargs.items():
             # set attributes, but don't reset explicit ones.
-            if not hasattr(parameters, key):
+            if hasattr(parameters, key):
                 logger.debug("setting {} to {}".format(key, value))
                 setattr(parameters, key, value)
 
@@ -91,8 +91,7 @@ def upload_volume_stats(action, period, service_type):
                                               service__service_type__name=service_type,
                                               service__report_on=True,
         ).exclude(service__isnull=True,
-        ).values('service__organization__name',
-                 'service__name',
+        ).values('service__organization__name', 'service__name',
         ).annotate(total=Sum('value'))
 
         if not len(datapoints) > 0:
@@ -116,7 +115,7 @@ def upload_volume_stats(action, period, service_type):
                                                                                      rounding="ROUND_HALF_UP"),
                                           Unit="", NormComp="", NormValue="", Type=metric,
                                           Instance=dp['service__name'], DepartmentList="NWD",
-                                          Period="{}-{}".format(period.year, period.month),
+                                          Period="{}-{}".format(period.year, period.strftime('%m')),
                                           Organisation=dp['service__organization__name'], IsKPI=False, Remark="")
 
             if result.ReturnCode < 0:
@@ -160,7 +159,8 @@ def upload_volume_stats(action, period, service_type):
                                           Value=Decimal(dp['total'] / 1e+9).quantize(Decimal('.01'),
                                                                                      rounding="ROUND_HALF_UP"),
                                           Unit="", NormComp="", NormValue="", Type=metric, Instance=groups[group],
-                                          DepartmentList="NWD", Period="{}-{}".format(period.year, period.month),
+                                          DepartmentList="NWD",
+                                          Period="{}-{}".format(period.year, period.strftime('%m')),
                                           Organisation="", IsKPI=False, Remark="")
 
             if result.ReturnCode < 0:
