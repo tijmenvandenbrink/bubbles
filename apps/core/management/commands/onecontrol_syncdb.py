@@ -23,8 +23,12 @@ def run_query(query):
 
     with con:
         cur = con.cursor()
-        cur.execute(query)
-        logger.debug('Executed following query: {0}'.format(query))
+        try:
+            logger.debug('Executing following query: {0}'.format(query))
+            cur.execute(query)
+        except mdb.ProgrammingError, e:
+            logger.warning('{}'.format(e))
+            return ()
 
         return cur.fetchall()
 
@@ -75,9 +79,11 @@ def get_port_volume(period):
         :type period: datetime.date
         :param metric: report metric
         :type metric: string
-        :returns: string
+        :returns: string, string
         """
         datestring = "%d_%d_%d" % (period.month, period.day, period.year)
+        table = "PORTSTATS{}".format(datestring)
+
         query = ('SELECT '
                  'POLLID, '
                  'MACADDRESS, '
@@ -88,8 +94,8 @@ def get_port_volume(period):
                  'PORTSTATS{0} '
                  'INNER JOIN '
                  'PolledData ON PORTSTATS{0}.MACADDRESS = PolledData.AGENT '
-                 'AND PORTSTATS{0}.POLLID = PolledData.ID '
-                 'AND PolledData.NAME = "{1}"').format(datestring, metric)
+                 'AND {0}.POLLID = PolledData.ID '
+                 'AND PolledData.NAME = "{1}"').format(table, metric)
         return query
 
     def _create_datapoints(data, metric):
