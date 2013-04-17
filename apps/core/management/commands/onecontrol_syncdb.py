@@ -91,7 +91,7 @@ def get_port_volume(period):
                  'VAL, '
                  'PORTFORMALNAME '
                  'FROM '
-                 'PORTSTATS{0} '
+                 '{0} '
                  'INNER JOIN '
                  'PolledData ON {0}.MACADDRESS = PolledData.AGENT '
                  'AND {0}.POLLID = PolledData.ID '
