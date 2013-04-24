@@ -11,7 +11,7 @@ class Device(Timestamped):
     device_type = models.CharField(max_length=50)
     ip = models.IPAddressField()
     software_version = models.CharField(max_length=200)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __unicode__(self):
         return "{0}".format(self.name)

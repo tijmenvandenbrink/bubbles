@@ -112,4 +112,16 @@ django-admin.py surf_syncdb --settings=bubbles.settings.local --pythonpath=<your
 Sync with Ciena OneControl
 ======
 
-django-admin.py onecontrol_syncdb YYYY-MM-DD --settings=bubbles.settings.local --pythonpath=<your project path>
+django-admin.py onecontrol_syncdb <YYYY-MM-DD> --settings=bubbles.settings.local --pythonpath=<your project path>
+
+
+Import legacy SURFnet Volume Reports
+======
+
+django-admin.py surf_legacy_import <filename> <filename2> ... --settings=bubbles.settings.local --pythonpath=<your project path>
+
+
+Upload to SURFnet VERS
+======
+
+django-admin.py upload2vers <YYYY-MM> --settings=bubbles.settings.local --pythonpath=<your project path>

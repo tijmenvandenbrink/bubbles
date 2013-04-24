@@ -1,11 +1,12 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS
 
 from taggit.managers import TaggableManager
 
 from apps.components.models import Component
 from apps.devices.models import Device
 from apps.services.models import Service
-
 
 # GAUGE
 # is for things like temperatures or number of people in a room or the value of a RedHat share.
@@ -81,10 +82,9 @@ class DataPoint(models.Model):
     end = models.DateTimeField()
     value = models.BigIntegerField()
     service = models.ForeignKey(Service, blank=True, null=True)
-    device = models.ForeignKey(Device, blank=True, null=True)
     component = models.ForeignKey(Component, blank=True, null=True)
     data_source = models.ForeignKey(DataSource)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __unicode__(self):
         return "[{0} - {1}] {2}".format(self.start, self.end, self.value)

@@ -11,7 +11,7 @@ class Component(Timestamped):
     device = models.ForeignKey(Device)
     speed = models.BigIntegerField(null=True, blank=True)
     report_on = models.BooleanField(default=False)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __unicode__(self):
         return "{0}".format(self.name)

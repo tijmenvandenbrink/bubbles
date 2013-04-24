@@ -1,7 +1,5 @@
-# import the logging library
 import logging
 
-# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 
@@ -12,7 +10,7 @@ def calculate_percentile():
 
 
 def get_derived_value(data, interval):
-    """ Return the start, end and derived value over a list of tuples:
+    """ Return the start, end and derived value over a list of timestamp/value pairs:
 
         :param data: list of tuples [(timestamp, value), ..]
         :type data: list

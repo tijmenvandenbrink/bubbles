@@ -2,8 +2,8 @@ from django.db import models
 
 from taggit.managers import TaggableManager
 
-from apps.core.models import Timestamped
-from apps.organizations.models import Organization
+from ..core.models import Timestamped
+from ..organizations.models import Organization
 
 
 class ServiceType(models.Model):
@@ -35,7 +35,7 @@ class Service(Timestamped):
     cir = models.BigIntegerField(null=True, blank=True)
     eir = models.BigIntegerField(null=True, blank=True)
     report_on = models.BooleanField(default=False)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __unicode__(self):
         return "{0}".format(self.name)

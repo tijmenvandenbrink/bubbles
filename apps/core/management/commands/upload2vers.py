@@ -86,8 +86,8 @@ def upload_volume_stats(action, period, service_type):
                                               start__gte=datetime(period.year, period.month, 1).replace(tzinfo=utc),
                                               end__lte=datetime(period.year, period.month,
                                                                 calendar.monthrange(period.year,
-                                                                                    period.month)[1]).replace(
-                                                  tzinfo=utc),
+                                                                                    period.month)[1], 23, 59,
+                                                                59).replace(tzinfo=utc),
                                               service__service_type__name=service_type,
                                               service__report_on=True,
         ).exclude(service__isnull=True,

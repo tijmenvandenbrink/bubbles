@@ -26,8 +26,6 @@ class Migration(SchemaMigration):
             ('value', self.gf('django.db.models.fields.BigIntegerField')()),
             ('service',
              self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], null=True, blank=True)),
-            ('device',
-             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['devices.Device'], null=True, blank=True)),
             ('component',
              self.gf('django.db.models.fields.related.ForeignKey')(to=orm['components.Component'], null=True,
                                                                    blank=True)),
@@ -35,8 +33,14 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('statistics', ['DataPoint'])
 
+        # Adding unique constraint on 'DataPoint', fields ['component', 'service', 'start', 'data_source', 'value']
+        db.create_unique('statistics_datapoint', ['component_id', 'service_id', 'start', 'data_source_id', 'value'])
+
 
     def backwards(self, orm):
+        # Removing unique constraint on 'DataPoint', fields ['component', 'service', 'start', 'data_source', 'value']
+        db.delete_unique('statistics_datapoint', ['component_id', 'service_id', 'start', 'data_source_id', 'value'])
+
         # Deleting model 'DataSource'
         db.delete_table('statistics_datasource')
 
@@ -112,12 +116,11 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         'statistics.datapoint': {
-            'Meta': {'object_name': 'DataPoint'},
+            'Meta': {'unique_together': "(('component', 'service', 'start', 'data_source', 'value'),)",
+                     'object_name': 'DataPoint'},
             'component': ('django.db.models.fields.related.ForeignKey', [],
                           {'to': "orm['components.Component']", 'null': 'True', 'blank': 'True'}),
             'data_source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['statistics.DataSource']"}),
-            'device': ('django.db.models.fields.related.ForeignKey', [],
-                       {'to': "orm['devices.Device']", 'null': 'True', 'blank': 'True'}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'service': ('django.db.models.fields.related.ForeignKey', [],

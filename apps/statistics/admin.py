@@ -3,11 +3,8 @@ from apps.statistics.models import DataPoint, DataSource
 
 
 class DataPointAdmin(admin.ModelAdmin):
-    list_display = ('data_source', 'device', 'component', 'service', 'start', 'end', 'value')
-    list_filter = ('service', 'device', 'component', 'start', 'end')
-    search_fields = ('data_source', 'service', 'device', 'component')
-
-    pass
+    list_display = ('data_source', 'component', 'service', 'start', 'end', 'value')
+    list_filter = ('service', 'component', 'start', 'end')
 
 
 class DataSourceAdmin(admin.ModelAdmin):
