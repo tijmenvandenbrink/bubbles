@@ -6,7 +6,7 @@ from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
 from ....devices.models import Device
 from ....components.models import Component
-from ....services.models import Service
+from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
 from ....core.utils import mkdate, get_derived_value
@@ -128,12 +128,28 @@ def get_port_volume(period):
                     logger.error("Datasource doesn't exist: datasource={0}".format(metric))
                     continue
 
+                service, created = Service.objects.get_or_create(service_id='{}-{}'.format(system_node_key,
+                                                                                           component),
+                                                                 defaults={'name': component,
+                                                                           'description': 'Services Port {} on {}'.format(
+                                                                               component, system_node_key),
+                                                                           'service_type': ServiceType.objects.get(
+                                                                               name='Port'),
+                                                                           'status': ServiceStatus.objects.get(
+                                                                               name='Production'),
+                                                                           'cir': 0,
+                                                                           'eir': 0,
+                                                                           'report_on': False})
+
+                service.component.add(comp)
+                service.save()
+
                 start, end, value = get_derived_value(d[system_node_key][component], 900)
                 # todo: support for dynamic intervals
                 logger.debug('Create DataPoint for {} on {}'.format(comp, dev))
 
                 try:
-                    dp, created = DataPoint.objects.get_or_create(start=start, end=end, value=value, component=comp,
+                    dp, created = DataPoint.objects.get_or_create(start=start, end=end, value=value, service=service,
                                                                   data_source=data_source)
 
                     if created is True:

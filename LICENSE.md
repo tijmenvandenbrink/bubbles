@@ -1,0 +1,12 @@
+END USER SOFTWARE LICENSE AGREEMENT (EULA) Telindus-ISIT B.V. grants End-User (hereinafter referred to as the “Licensee”), subject to the limitations and restrictions set out in this EULA, a non-exclusive, non-transferrable license to use the Software solely for its own internal business purposes (hereinafter referred to as the “Purpose”). This license is provided for an indefinite term. Licensee may not:
+
+make unauthorized copies of the Software;
+remove any propriety notices, labels, or marks on or in any copy of the Software;
+use the Software other than as for the Purpose;
+transfer, sublicense, rent or grant any rights to the Software to a third party;
+modify, unbundle, reverse engineer, or create derivative works based on the Software.
+Telindus-ISIT retains ownership of all right, title, and interest (including copyright) in and to the Software, associated documentation, and all copies of the Software. Nothing in this Agreement constitutes a transfer or conveyance of any right, title, or interest in the Software or associated documentation, or a sale of the Software, associated documentation, or copies of the Software. The Software and accompanying documentation are the confidential property of Telindus-ISIT. Licensee will maintain the Software and accompanying documentation in strict confidence. Unauthorized use of the Software will result in automatic termination of the license granted hereunder without limitation to the remedies Telindus-ISIT is legally entitled to. Upon termination Licensee will destroy or return to Telindus-ISIT all copies of the Software, including all accompanying documentation.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL TELINDUS-ISIT OR ITS LICENSORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This Agreement shall be governed by the laws of the Netherlands. Disputes shall be brought exclusively before the competent courts of Utrecht, the Netherlands.

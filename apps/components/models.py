@@ -10,7 +10,6 @@ class Component(Timestamped):
     name = models.CharField(max_length=200)
     device = models.ForeignKey(Device)
     speed = models.BigIntegerField(null=True, blank=True)
-    report_on = models.BooleanField(default=False)
     tags = TaggableManager(blank=True)
 
     def __unicode__(self):

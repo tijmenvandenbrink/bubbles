@@ -3,6 +3,7 @@ from django.db import models
 from taggit.managers import TaggableManager
 
 from ..core.models import Timestamped
+from ..components.models import Component
 from ..organizations.models import Organization
 
 
@@ -32,6 +33,7 @@ class Service(Timestamped):
     sub_services = models.ManyToManyField('self', null=True, blank=True, related_name="child_services")
     service_type = models.ForeignKey(ServiceType)
     status = models.ForeignKey(ServiceStatus)
+    component = models.ManyToManyField(Component, null=True, blank=True)
     cir = models.BigIntegerField(null=True, blank=True)
     eir = models.BigIntegerField(null=True, blank=True)
     report_on = models.BooleanField(default=False)

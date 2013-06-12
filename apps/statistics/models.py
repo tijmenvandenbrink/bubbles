@@ -82,7 +82,6 @@ class DataPoint(models.Model):
     end = models.DateTimeField()
     value = models.BigIntegerField()
     service = models.ForeignKey(Service, blank=True, null=True)
-    component = models.ForeignKey(Component, blank=True, null=True)
     data_source = models.ForeignKey(DataSource)
     tags = TaggableManager(blank=True)
 

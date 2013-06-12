@@ -61,7 +61,6 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
         'contenttypes.contenttype': {
@@ -120,6 +119,9 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'component': ('django.db.models.fields.related.ManyToManyField', [],
+                          {'symmetrical': 'False', 'to': "orm['components.Component']", 'null': 'True',
+                           'blank': 'True'}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),

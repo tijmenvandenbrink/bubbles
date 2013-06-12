@@ -85,7 +85,7 @@ class Command(BaseCommand):
             ('tdh', 'Tunnel Dual-homed'),
             # Low level types
             ('lag', 'LAG'),
-            ('link', 'Link'),
+            ('port', 'Port'),
             # Unknown
             ('unknown', 'Unknown')
         )
@@ -110,4 +110,4 @@ class Command(BaseCommand):
             data = SurfSoap(v['url'], v['backup_file'], k).getdata()
             sync_objects(data)
 
-    logger.info('Successfully synced database')
+        logger.info('Successfully synced database')

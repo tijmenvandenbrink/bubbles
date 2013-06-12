@@ -26,21 +26,12 @@ class Migration(SchemaMigration):
             ('value', self.gf('django.db.models.fields.BigIntegerField')()),
             ('service',
              self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], null=True, blank=True)),
-            ('component',
-             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['components.Component'], null=True,
-                                                                   blank=True)),
             ('data_source', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['statistics.DataSource'])),
         ))
         db.send_create_signal('statistics', ['DataPoint'])
 
-        # Adding unique constraint on 'DataPoint', fields ['component', 'service', 'start', 'data_source', 'value']
-        db.create_unique('statistics_datapoint', ['component_id', 'service_id', 'start', 'data_source_id', 'value'])
-
 
     def backwards(self, orm):
-        # Removing unique constraint on 'DataPoint', fields ['component', 'service', 'start', 'data_source', 'value']
-        db.delete_unique('statistics_datapoint', ['component_id', 'service_id', 'start', 'data_source_id', 'value'])
-
         # Deleting model 'DataSource'
         db.delete_table('statistics_datasource')
 
@@ -56,7 +47,6 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
         'contenttypes.contenttype': {
@@ -88,6 +78,9 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'component': ('django.db.models.fields.related.ManyToManyField', [],
+                          {'symmetrical': 'False', 'to': "orm['components.Component']", 'null': 'True',
+                           'blank': 'True'}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
@@ -116,10 +109,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         'statistics.datapoint': {
-            'Meta': {'unique_together': "(('component', 'service', 'start', 'data_source', 'value'),)",
-                     'object_name': 'DataPoint'},
-            'component': ('django.db.models.fields.related.ForeignKey', [],
-                          {'to': "orm['components.Component']", 'null': 'True', 'blank': 'True'}),
+            'Meta': {'object_name': 'DataPoint'},
             'data_source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['statistics.DataSource']"}),
             'end': ('django.db.models.fields.DateTimeField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

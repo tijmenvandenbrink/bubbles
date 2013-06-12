@@ -54,6 +54,14 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('services_service_sub_services', ['from_service_id', 'to_service_id'])
 
+        # Adding M2M table for field component on 'Service'
+        db.create_table('services_service_component', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('service', models.ForeignKey(orm['services.service'], null=False)),
+            ('component', models.ForeignKey(orm['components.component'], null=False))
+        ))
+        db.create_unique('services_service_component', ['service_id', 'component_id'])
+
 
     def backwards(self, orm):
         # Deleting model 'ServiceType'
@@ -71,8 +79,20 @@ class Migration(SchemaMigration):
         # Removing M2M table for field sub_services on 'Service'
         db.delete_table('services_service_sub_services')
 
+        # Removing M2M table for field component on 'Service'
+        db.delete_table('services_service_component')
+
 
     models = {
+        'components.component': {
+            'Meta': {'object_name': 'Component'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['devices.Device']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
         'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
                      'object_name': 'ContentType', 'db_table': "'django_content_type'"},
@@ -80,6 +100,17 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
+        'devices.device': {
+            'Meta': {'object_name': 'Device'},
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'device_type': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ip': ('django.db.models.fields.IPAddressField', [], {'max_length': '15'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'software_version': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'system_node_key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
         },
         'organizations.organization': {
             'Meta': {'object_name': 'Organization'},
@@ -91,6 +122,9 @@ class Migration(SchemaMigration):
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'component': ('django.db.models.fields.related.ManyToManyField', [],
+                          {'symmetrical': 'False', 'to': "orm['components.Component']", 'null': 'True',
+                           'blank': 'True'}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),

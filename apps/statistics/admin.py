@@ -3,8 +3,9 @@ from apps.statistics.models import DataPoint, DataSource
 
 
 class DataPointAdmin(admin.ModelAdmin):
-    list_display = ('data_source', 'component', 'service', 'start', 'end', 'value')
-    list_filter = ('service', 'component', 'start', 'end')
+    list_display = ('data_source', 'service', 'start', 'end', 'value')
+    list_filter = ('data_source', 'service', 'start', 'end')
+    list_display_links = ('service', 'start', 'end', 'value')
 
 
 class DataSourceAdmin(admin.ModelAdmin):
