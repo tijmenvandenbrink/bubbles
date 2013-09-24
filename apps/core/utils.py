@@ -9,6 +9,12 @@ def calculate_percentile():
     pass
 
 
+def consolidate():
+    """
+    """
+    pass
+
+
 def get_derived_value(data, interval):
     """ Return the start, end and derived value over a list of timestamp/value pairs:
 

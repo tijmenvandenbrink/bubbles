@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 def sync_objects(data):
+    """ Reconciles all client records retrieved from IDD with the Bubbles database
+
+    :param data: client records retrieved from IDD
+    :type data: dictionary
+    """
     for klant in data.keys():
         for service_id in data[klant].keys():
             obj = data[klant][service_id]
