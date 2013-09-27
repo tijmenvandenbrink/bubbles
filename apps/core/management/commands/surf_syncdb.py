@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def sync_objects(data):
-    """ Reconciles all client records retrieved from IDD with the Bubbles database
+    """ Reconciles all client records retrieved from IDD with the Bubbles database.
 
     :param data: client records retrieved from IDD
     :type data: dictionary
@@ -26,6 +26,8 @@ def sync_objects(data):
                                                                   defaults={'name': obj['klantnaam'],
                                                                             'org_abbreviation': obj['klantafkorting']})
 
+                #todo: If klantnaam or klantafkorting differs from what's in the Bubbles database update it
+
                 service, created = Service.objects.get_or_create(service_id=obj['int_id'],
                                                                  defaults={'name': obj['interfacenaam'],
                                                                            'description': obj['omschrijving'],
@@ -37,10 +39,15 @@ def sync_objects(data):
                                                                            'eir': obj['capaciteit_1'],
                                                                            'report_on': True})
                 service.organization.add(org)
+
+                #todo: If service fields differ from what's in the Bubbles database update them
+
             elif 'klantid' in obj and 'service_id' in obj:
                 org, created = Organization.objects.get_or_create(org_id=obj['klantid'],
                                                                   defaults={'name': obj['klantnaam'],
                                                                             'org_abbreviation': obj['klantafkorting']})
+
+                #todo: If klantnaam or klantafkorting differs from what's in the Bubbles database update it
 
                 service, created = Service.objects.get_or_create(service_id=obj['service_id'],
                                                                  defaults={'name': obj['service_id'],
@@ -53,6 +60,9 @@ def sync_objects(data):
                                                                            'eir': obj['capaciteit_kv'],
                                                                            'report_on': True})
                 service.organization.add(org)
+
+                #todo: If service fields differ from what's in the Bubbles database update them
+
             else:
                 logger.error("We found a strange object in IDD: {}".format(obj))
                 continue
@@ -72,25 +82,23 @@ class Command(BaseCommand):
         # Fixture for adding Service types
         SERVICE_TYPE_CHOICES = (
             # Customer service types
-            ('sipu', 'Static IP Unprotected (VRRP)'),
-            ('sipp', 'Static IP Protected (VRRP)'),
-            ('dipu', 'Dynamic IP Unprotected (BGP)'),
-            ('dipp', 'Dynamic IP Protected (BGP)'),
-            ('slpu', 'Static LP (Unprotected)'),
-            ('slpp', 'Static LP (Protected)'),
-            ('slpr', 'Static LP (Resilient)'),
-            ('dlpu', 'Dynamic LP (Unprotected)'),
-            ('dlpp', 'Dynamic LP (Protected)'),
-            ('dlpr', 'Dynamic LP (Resilient)'),
-            ('ip', 'IP Interface'),
-            ('lp', 'LP Interface'),
+            ('IE', 'IP Unprotected'),
+            ('IP', 'IP Protected'),
+            ('IR', 'IP Resilient'),
+            ('LE', 'Static LP (Unprotected)'),
+            ('LP', 'Static LP (Protected)'),
+            ('LR', 'Static LP (Resilient)'),
+            ('DLE', 'Dynamic LP (Unprotected)'),
+            ('DLP', 'Dynamic LP (Protected)'),
+            ('DLR', 'Dynamic LP (Resilient)'),
+            ('VL', 'VLAN'),
             # Tunnel types
-            ('tu', 'Tunnel Unprotected'),
-            ('tp', 'Tunnel Protected'),
-            ('tdh', 'Tunnel Dual-homed'),
-            # Low level types
-            ('lag', 'LAG'),
-            ('port', 'Port'),
+            ('TU', 'Tunnel Unprotected'),
+            ('TP', 'Tunnel Protected'),
+            ('TDH', 'Tunnel Dual-homed'),
+            # Port types
+            ('LAG', 'LAG'),
+            ('PORT', 'Port'),
             # Unknown
             ('unknown', 'Unknown')
         )

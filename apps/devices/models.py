@@ -8,6 +8,7 @@ from ..core.models import Timestamped
 class Device(Timestamped):
     name = models.CharField(max_length=200)
     system_node_key = models.CharField(max_length=50, unique=True)
+    pbbte_bridge_mac = models.CharField(max_length=50, unique=True)
     device_type = models.CharField(max_length=50)
     ip = models.IPAddressField()
     software_version = models.CharField(max_length=200)
