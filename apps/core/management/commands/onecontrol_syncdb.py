@@ -1,7 +1,9 @@
 import MySQLdb as mdb
 import logging
 import pandas.io.sql as psql
+import numpy as np
 from optparse import make_option
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
@@ -13,7 +15,7 @@ from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
 from ....core.utils import mkdate
-from surf_utils import get_service_type
+from surf_utils import get_service_info_from_string
 
 logger = logging.getLogger(__name__)
 
@@ -24,22 +26,24 @@ def run_query(query):
         :param query: MySQL query
         :type query: string
     """
-    logger.debug('Setup MySQL client connection with host={}, port={} user={}, database={}'.format(ONECONTROLHOST,
-                                                                                                   ONECONTROLDBPORT,
-                                                                                                   ONECONTROLDBUSER,
-                                                                                                   ONECONTROLDB))
+    logger.debug('action="Setup MySQL client connection", host={}, port={}, user={}, database={}'.format(ONECONTROLHOST,
+                                                                                                         ONECONTROLDBPORT,
+                                                                                                         ONECONTROLDBUSER,
+                                                                                                         ONECONTROLDB))
     con = mdb.connect(host=ONECONTROLHOST, port=int(ONECONTROLDBPORT), user=ONECONTROLDBUSER,
                       passwd=ONECONTROLDBPASSWORD, db=ONECONTROLDB)
 
     with con:
         cur = con.cursor()
         try:
-            logger.debug('Executing following query: {0}'.format(query))
+            logger.debug('action="Executing query", query="{}"'.format(query))
             cur.execute(query)
         except mdb.ProgrammingError, e:
-            logger.warning('{}'.format(e))
+            logger.error('action="Executing query", status="Failed", query="{}"'.format(query))
+            logger.error('{}'.format(e))
             return ()
 
+        logger.info('action="Executing query", status="Success", query="{}"'.format(query))
         return cur.fetchall()
 
 
@@ -49,18 +53,19 @@ def get_dataframe(query):
         :param query: MySQL query
         :type query: string
     """
-    logger.debug('Setup MySQL client connection with host={}, port={} user={}, database={}'.format(ONECONTROLHOST,
-                                                                                                   ONECONTROLDBPORT,
-                                                                                                   ONECONTROLDBUSER,
-                                                                                                   ONECONTROLDB))
+    logger.debug('action="Setup MySQL client connection", host={}, port={}, user={}, database={}'.format(ONECONTROLHOST,
+                                                                                                         ONECONTROLDBPORT,
+                                                                                                         ONECONTROLDBUSER,
+                                                                                                         ONECONTROLDB))
     con = mdb.connect(host=ONECONTROLHOST, port=int(ONECONTROLDBPORT), user=ONECONTROLDBUSER,
                       passwd=ONECONTROLDBPASSWORD, db=ONECONTROLDB)
 
     with con:
         try:
-            logger.debug('Executing following query: {0}'.format(query))
+            logger.debug('action="Executing query", query="{}"'.format(query))
             df = psql.frame_query(query, con=con)
         except mdb.ProgrammingError, e:
+            logger.error('action="Executing query", status="Failed", query="{}"'.format(query))
             logger.warning('{}'.format(e))
             return ()
 
@@ -87,35 +92,29 @@ def sync_devices():
     rows = run_query(query)
 
     for row in rows:
-        try:
-            device, created = Device.objects.get_or_create(pbbte_bridge_mac=row[5],
-                                                           defaults={'system_node_key': row[0], 'ip': row[3],
-                                                                     'software_version': row[4],
-                                                                     'device_type': row[1], 'name': row[2]})
-            if created is True:
-                logger.info('Created new device: name={0.name}, system_node_key={0.system_node_key}, '
-                            'pbbte_bridge_mac={0.pbbte_bridge_mac}, device_type={0.device_type}, ip={0.ip}, '
-                            'software_version={0.software_version}'.format(device))
-            else:
-                logger.debug('Device exists: name={0.name}, system_node_key={0.system_node_key}, '
-                             'pbbte_bridge_mac={0.pbbte_bridge_mac}, device_type={0.device_type}, ip={0.ip}, '
-                             'software_version={0.software_version}'.format(device))
+        device, created = Device.objects.get_or_create(pbbte_bridge_mac=row[5],
+                                                       defaults={'system_node_key': row[0], 'ip': row[3],
+                                                                 'software_version': row[4],
+                                                                 'device_type': row[1], 'name': row[2]})
+        if created is True:
+            logger.info('action="Device create", status="Created", component=device, device_name={0.name}, '
+                        'system_node_key={0.system_node_key}, pbbte_bridge_mac={0.pbbte_bridge_mac}, '
+                        'device_type={0.device_type}, ip={0.ip}, software_version={0.software_version}'.format(device))
+        else:
+            logger.info('action="Device create", status="Exists", component=device, device_name={0.name}, '
+                        'system_node_key={0.system_node_key}, pbbte_bridge_mac={0.pbbte_bridge_mac}, '
+                        'device_type={0.device_type}, ip={0.ip}, software_version={0.software_version}'.format(device))
 
-                defaults = {'system_node_key': row[0], 'ip': row[3], 'software_version': row[4],
-                            'device_type': row[1], 'name': row[2]}
+            defaults = {'system_node_key': row[0], 'ip': row[3], 'software_version': row[4],
+                        'device_type': row[1], 'name': row[2]}
 
-                for k, v in defaults.items():
-                    if not getattr(device, k) == v:
-                        logger.info("Device updated: Changed {} on {} from {} to {}".format(k, device.name,
-                                                                                            getattr(device, k), v))
-                        setattr(device, k, v)
+            for k, v in defaults.items():
+                if not getattr(device, k) == v:
+                    setattr(device, k, v)
+                    logger.info('action="Device create", status="Updated", component=device, device_name={}, '
+                                'attribute={}, oldvalue={}, newvalue={}'.format(device.name, k, getattr(device, k), v))
 
-                    device.save()
-
-        except MultipleObjectsReturned:
-            logger.error('Multiple devices returned when we tried to create the device: name={0}, system_node_key={1}, '
-                         'pbbte_bridge_mac={0.pbbte_bridge_mac}, device_type={2}, ip={3}, '
-                         'software_version={4}'.format(row[2], row[0], row[1], row[3], row[4]))
+                device.save()
 
 
 def get_port_volume(period):
@@ -126,7 +125,8 @@ def get_port_volume(period):
     """
 
     def _create_query(period, metric):
-        """ Returns the SQL query to get port volume data from OneControl
+        """ Returns the SQL query to get port volume data from OneControl.
+        As data might be scattered over 3 different tables we have to query all 3.
 
         :param period: date
         :type period: datetime.date
@@ -134,24 +134,27 @@ def get_port_volume(period):
         :type metric: string
         :returns: string, string
         """
-        datestring = "%d_%d_%d" % (period.month, period.day, period.year)
-        table = "PORTSTATS{}".format(datestring)
+        start = "{:%Y-%m-%d 00:00:00}".format(period)
+        end = "{:%Y-%m-%d 00:00:00}".format(period + timedelta(days=1))
+        query = ""
 
-        query = ('SELECT '
-                 'POLLID, '
-                 'MACADDRESS, '
-                 'from_unixTime(TTIME / 1000) AS TIMESTAMP, '
-                 'VAL, '
-                 'PORTFORMALNAME '
-                 'FROM '
-                 '{0} '
-                 'INNER JOIN '
-                 'PolledData ON {0}.MACADDRESS = PolledData.AGENT '
-                 'AND {0}.POLLID = PolledData.ID '
-                 'AND PolledData.NAME = "{1}"').format(table, metric)
+        for n in range(-1, 2):
+            table = "PORTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            query += ('(SELECT POLLID, MACADDRESS, from_unixTime(TTIME / 1000) AS TIMESTAMP, VAL, PORTFORMALNAME '
+                      'FROM {table} '
+                      'INNER JOIN '
+                      'PolledData ON {table}.MACADDRESS = PolledData.AGENT '
+                      'AND {table}.POLLID = PolledData.ID '
+                      'AND PolledData.NAME = "{metric}"'
+                      'WHERE TTIME >= (UNIX_TIMESTAMP("{start}") * 1000) '
+                      'AND (TTIME <= UNIX_TIMESTAMP("{end}") * 1000))').format(table=table, metric=metric,
+                                                                               start=start, end=end)
+            if n < 1:
+                query += ' UNION '
+
         return query
 
-    def _create_datapoints_from_dataframe(df, metric):
+    def _create_datapoints_from_dataframe(df, datasource):
         """ Creates the DataPoint objects from a Pandas DataFrame
 
         :param df: Pandas dataframe which hold all the stats for a certain metric
@@ -166,71 +169,100 @@ def get_port_volume(period):
             try:
                 dev = Device.objects.get(system_node_key=system_node_key)
             except ObjectDoesNotExist:
-                logger.error("Device doesn't exist: system_node_key={0}. "
-                             "Datapoints are not created for this device.".format(system_node_key))
+                logger.error('action="Device get", status="ObjectDoesNotExist". result="Datapoints are not created for '
+                             'this device.", component=device, system_node_key={0}'.format(system_node_key))
                 continue
 
             for component in df2['PORTFORMALNAME'].unique():
                 comp, created = Component.objects.get_or_create(name=component, device=dev)
+                if created is True:
+                    logger.info('action="Component create", status="Created", component=component, '
+                                'component_name={component_name}, '
+                                'device_name={device_name}'.format(component_name=comp.name, device_name=dev.name))
+                else:
+                    logger.info('action="Component create", status="Exists", component=component, '
+                                'component_name={component_name}, '
+                                'device_name={device_name}'.format(component_name=comp.name, device_name=dev.name))
 
-                try:
-                    # We hardcoded a 1 day interval here
-                    data_source = DataSource.objects.get(name=metric, interval=86400)
-                except ObjectDoesNotExist:
-                    logger.error("Datasource doesn't exist: datasource={0}".format(metric))
-                    continue
-
-                service, created = Service.objects.get_or_create(service_id='{}-{}'.format(dev.pbbte_bridge_mac,
-                                                                                           component)[:24],
+                service, created = Service.objects.get_or_create(service_id='{}_{}'.format(dev.pbbte_bridge_mac,
+                                                                                           component),
                                                                  defaults={'name': component,
-                                                                           'description': 'Services Port {} on {}'.format(
-                                                                               component, dev.pbbte_bridge_mac),
+                                                                           'description': 'Services Port {} on '
+                                                                                          '{}'.format(component,
+                                                                                                      dev.name),
                                                                            'service_type': ServiceType.objects.get(
                                                                                name='Port'),
                                                                            'status': ServiceStatus.objects.get(
                                                                                name='Production'),
-                                                                           'cir': 0,
-                                                                           'eir': 0,
-                                                                           'report_on': False})
+                                                                 })
+
+                if created is True:
+                    logger.info(
+                        'action="Service create", status="Created", component=service, service_name={service_name}, '
+                        'service_id={service_id}, service_type={service_type}, '
+                        'service_status={status}).'.format(service_name=service.name,
+                                                           service_id=service.service_id,
+                                                           service_type=service.service_type,
+                                                           status=service.status))
+                else:
+                    logger.info(
+                        'action="Service create", status="Exists", component=service, service_name={service_name}, '
+                        'service_id={service_id}, service_type={service_type}, '
+                        'service_status={status}).'.format(service_name=service.name,
+                                                           service_id=service.service_id,
+                                                           service_type=service.service_type,
+                                                           status=service.status))
 
                 service.component.add(comp)
+                logger.info('action="Component add" status="Added", component=service, '
+                            'component_name={component}, service_name={service_name}, service_id={service_id}, '
+                            'service_type={service_type}, '
+                            'service_status={status}).'.format(component=comp.name,
+                                                               service_name=service.name,
+                                                               service_id=service.service_id,
+                                                               service_type=service.service_type,
+                                                               status=service.status))
                 service.save()
 
                 df3 = df2[df2.PORTFORMALNAME == component]
                 df4 = df3.set_index('TIMESTAMP')
                 value = df4['VAL'].diff().abs().sum()
 
-                logger.info('Creating DataPoints for {} on {}'.format(comp, dev))
+                logger.info('action="Creating DataPoints" component=component, '
+                            'component_name={}, device_name={}'.format(comp, dev))
 
                 start = df3['TIMESTAMP'].min().to_pydatetime().replace(tzinfo=utc)
                 end = df3['TIMESTAMP'].max().to_pydatetime().replace(tzinfo=utc)
 
                 try:
                     dp, created = DataPoint.objects.get_or_create(start__range=(start, end), end__range=(start, end),
-                                                                  data_source=data_source, service=service,
+                                                                  data_source=datasource, service=service,
                                                                   defaults={'start': start, 'end': end, 'value': value})
 
                     if created is True:
-                        logger.debug('Created DataPoint (start={}, end={}, value={}) '
-                                     'for {} on {}'.format(start, end, value, comp, dev))
+                        logger.debug('action="DataPoint create" status="Created", component=component, '
+                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                     'device_name={}'.format(datasource.name, start, end, value, comp, dev))
                     else:
-                        logger.debug('Datapoint exists: (start={}, end={}, value={}) '
-                                     'for {} on {}.'.format(dp.start, dp.end, dp.value, comp, dev))
-
+                        logger.debug('action="DataPoint create" status="Exists", component=component, '
+                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                     'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value, comp, dev))
                         dp.start = start
                         dp.end = end
                         dp.value = value
-                        dp.save
-
-                        logger.debug('Datapoint updated: (start={}, end={}, value={}) '
-                                     'for {} on {}.'.format(dp.start, dp.end, dp.value, comp, dev))
+                        dp.save()
+                        logger.debug('action="DataPoint create" status="Updated", component=component, '
+                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                     'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value, comp, dev))
                     n_dps += 1
 
                 except MultipleObjectsReturned:
-                    logger.error('Multiple datapoints found: (start={}, end={}, value={}) '
-                                 'for {} on {}. Please remove them manually'.format(start, end, value, comp, dev))
+                    logger.error('action="DataPoint create" status="MultipleObjectsReturned", component=component, '
+                                 'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                 'device_name={}'.format(datasource.name, start, end, value, comp, dev))
 
-        logger.info("Created {} datapoints of datasource '{}'".format(n_dps, data_source.name))
+        logger.info('action="DataPoint create", component=datapoint, datasource_name="{}", '
+                    'datapoints_total={}'.format(datasource.name, n_dps))
 
     def _run():
         """ Runs the port volume sync """
@@ -238,7 +270,7 @@ def get_port_volume(period):
 
         for k, v in METRIC_MAP.items():
             df = get_dataframe(_create_query(period, k))
-            _create_datapoints_from_dataframe(df, v)
+            _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             # todo: Compute percentile
 
     _run()
@@ -251,8 +283,38 @@ def get_service_volume(period):
     :type period: datetime.date
     """
 
+    def _get_or_create_parent_service(service_id):
+        service_info = get_service_info_from_string(service_id)
+        service, created = Service.objects.get_or_create(service_id="{}".format(service_id),
+                                                         description="{} Parent Service".format(service_id),
+                                                         defaults={'name': service_id,
+                                                                   'service_type': ServiceType.objects.get(
+                                                                       name=SERVICE_TYPE_MAP[
+                                                                           service_info.get('service_type')]),
+                                                                   'status': ServiceStatus.objects.get(
+                                                                       name='Production'),
+                                                                   'report_on': False})
+
+        if created is True:
+            logger.info('action="Parent service created" status="OK", component=service, service_name={service_name}, '
+                        'service_id={service_id}, service_type={service_type}, '
+                        'service_status={status}).'.format(service_name=service.name,
+                                                           service_id=service.service_id,
+                                                           service_type=service.service_type,
+                                                           status=service.status))
+        else:
+            logger.info('action="Parent service exists" status="OK", component=service, service_name={service_name}, '
+                        'service_id={service_id}, service_type={service_type}, '
+                        'service_status={status}).'.format(service_name=service.name,
+                                                           service_id=service.service_id,
+                                                           service_type=service.service_type,
+                                                           status=service.status))
+
+        return service, created
+
     def _create_query(period, metric):
         """ Returns the SQL query to get port volume data from OneControl
+        As data might be scattered over 3 different tables we have to query all 3.
 
         :param period: date
         :type period: datetime.date
@@ -260,32 +322,41 @@ def get_service_volume(period):
         :type metric: string
         :returns: string, string
         """
-        datestring = "%d_%d_%d" % (period.month, period.day, period.year)
-        table = "SERVICEENDPOINTSTATS{}".format(datestring)
+        start = "{:%Y-%m-%d 00:00:00}".format(period)
+        end = "{:%Y-%m-%d 00:00:00}".format(period + timedelta(days=1))
+        query = ""
 
-        query = ('SELECT '
-                 'POLLID, '
-                 'VS, '
-                 'MACADDRESS, '
-                 'from_unixTime(TTIME / 1000) AS TIMESTAMP, '
-                 'VAL '
-                 'FROM '
-                 '{0} '
-                 'INNER JOIN '
-                 'PolledData ON {0}.MACADDRESS = PolledData.AGENT '
-                 'AND {0}.POLLID = PolledData.ID '
-                 'AND {0}.VS != "" '
-                 'AND PolledData.NAME = "{1}"').format(table, metric)
+        for n in range(-1, 2):
+            table = "SERVICEENDPOINTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            query += ('(SELECT '
+                      'POLLID, '
+                      'VS, '
+                      'PORTFORMALNAME, '
+                      'MACADDRESS, '
+                      'from_unixTime(TTIME / 1000) AS TIMESTAMP, '
+                      'VAL '
+                      'FROM '
+                      '{table} '
+                      'INNER JOIN '
+                      'PolledData ON {table}.MACADDRESS = PolledData.AGENT '
+                      'AND {table}.POLLID = PolledData.ID '
+                      'AND {table}.VS != "" '
+                      'AND PolledData.NAME = "{metric}" '
+                      'WHERE TTIME >= (UNIX_TIMESTAMP("{start}") * 1000) '
+                      'AND (TTIME <= UNIX_TIMESTAMP("{end}") * 1000))').format(table=table, metric=metric,
+                                                                               start=start, end=end)
+            if n < 1:
+                query += ' UNION '
 
         return query
 
-    def _create_datapoints_from_dataframe(df, metric):
+    def _create_datapoints_from_dataframe(df, datasource):
         """ Creates the DataPoint objects from a Pandas DataFrame
 
         :param df: Pandas dataframe which hold all the stats for a certain metric
         :type df: pandas.core.frame.DataFrame
         """
-        n_dps = 0
+        logger.info("DataFrame contains {} samples for metric: {}".format(len(df), datasource.name))
         for pollid in df['POLLID'].unique():
             df2 = df[df.POLLID == pollid]
 
@@ -294,66 +365,149 @@ def get_service_volume(period):
             try:
                 dev = Device.objects.get(system_node_key=system_node_key)
             except ObjectDoesNotExist:
-                logger.error("Device doesn't exist: system_node_key={0}. "
-                             "Datapoints are not created for this device.".format(system_node_key))
+                logger.error('action="Device get", status="ObjectDoesNotExist", result="Datapoints are not created for '
+                             'this device.", component=device, system_node_key={0}'.format(system_node_key))
+
                 continue
 
-            for service_id in df2['VS'].unique():
+            logger.info('action="Unique services in dataframe" component=service, datasource_name={}, services={}, '
+                        'device_name={}'.format(datasource.name, len(df2['VS'].unique()), dev.name))
 
-                try:
-                    # We hardcoded a 1 day interval here
-                    data_source = DataSource.objects.get(name=metric, interval=86400)
-                except ObjectDoesNotExist:
-                    logger.error("Datasource doesn't exist: datasource={0}".format(metric))
+            for service_id in df2['VS'].unique():
+                service_info = get_service_info_from_string(service_id)
+                # Only sync services defined in SYNC_SERVICE_TYPES
+                if not service_info.get('service_type') in SYNC_SERVICE_TYPES:
+                    logger.debug('action="Check service type sync property", status="False", result="Service type not '
+                                 'in SYNC_SERVICE_TYPES. Ignoring it" component=service, service_id={}, '
+                                 'service_type={}'.format(service_id, service_info.get('service_type')))
                     continue
 
-                service, created = Service.objects.get_or_create(service_id=service_id,
-                                                                 defaults={'name': service_id,
-                                                                           'description': '{} on {} '.format(service_id,
-                                                                                                             dev.pbbte_bridge_mac),
-                                                                           'service_type': ServiceType.objects.get(
-                                                                               name=get_service_type(service_id)),
-                                                                           'status': ServiceStatus.objects.get(
-                                                                               name='Production'),
-                                                                           'cir': 0,
-                                                                           'eir': 0,
-                                                                           'report_on': False})
+                parent_service, parent_created = _get_or_create_parent_service(service_id)
 
                 df3 = df2[df2.VS == service_id]
-                df4 = df3.set_index('TIMESTAMP')
-                value = df4['VAL'].diff().abs().sum()
+                logger.info('action="Unique components in dataframe", status="OK", component=service,'
+                            'parent_service={}, service_id={}, components={}'.format(service_id,
+                                                                                     len(df3[
+                                                                                         'PORTFORMALNAME'].unique()),
+                                                                                     parent_service.name))
 
-                logger.info('Creating DataPoints for {} on {}'.format(service_id, dev))
+                for component in df3['PORTFORMALNAME'].unique():
+                    comp, created = Component.objects.get_or_create(name=component, device=dev)
+                    if created is True:
+                        logger.info('action="Component create", status="Created", component=service, '
+                                    'component_name={component_name}, '
+                                    'device_name={device_name}'.format(component_name=comp.name, device_name=dev.name))
+                    else:
+                        logger.info('action="Component create" status="Exists", component=service, '
+                                    'component_name={component_name} '
+                                    'device_name={device_name}'.format(component_name=comp.name, device_name=dev.name))
 
-                start = df3['TIMESTAMP'].min().to_pydatetime().replace(tzinfo=utc)
-                end = df3['TIMESTAMP'].max().to_pydatetime().replace(tzinfo=utc)
-
-                try:
-                    dp, created = DataPoint.objects.get_or_create(start__range=(start, end), end__range=(start, end),
-                                                                  data_source=data_source, service=service,
-                                                                  defaults={'start': start, 'end': end, 'value': value})
+                    service, created = Service.objects.get_or_create(service_id="{}_{}".format(dev.pbbte_bridge_mac,
+                                                                                               service_id),
+                                                                     description="{} on {}".format(service_id,
+                                                                                                   dev.name),
+                                                                     defaults={'name': service_id,
+                                                                               'service_type': ServiceType.objects.get(
+                                                                                   name=SERVICE_TYPE_MAP[
+                                                                                       service_info.get(
+                                                                                           'service_type')]),
+                                                                               'status': ServiceStatus.objects.get(
+                                                                                   name='Production'),
+                                                                     })
 
                     if created is True:
-                        logger.debug('Created DataPoint (start={}, end={}, value={}) '
-                                     'for {} on {}'.format(start, end, value, service_id, dev))
+                        logger.info(
+                            'action="Service create", status="Created", component=service, service_name={service_name}, '
+                            'service_id={service_id}, service_type={service_type}, '
+                            'service_status={status}).'.format(service_name=service.name,
+                                                               service_id=service.service_id,
+                                                               service_type=service.service_type,
+                                                               status=service.status))
                     else:
-                        logger.debug('Datapoint exists: (start={}, end={}, value={}) '
-                                     'for {} on {}.'.format(dp.start, dp.end, dp.value, service_id, dev))
+                        logger.info(
+                            'action="Service create", status="Exists", component=service, service_name={service_name}, '
+                            'service_id={service_id}, service_type={service_type}, '
+                            'service_status={status}).'.format(service_name=service.name,
+                                                               service_id=service.service_id,
+                                                               service_type=service.service_type,
+                                                               status=service.status))
 
-                        dp.start = start
-                        dp.end = end
-                        dp.value = value
-                        dp.save
+                    service.component.add(comp)
+                    logger.info('action="Component add" status="Added", component=service, '
+                                'component_name={component}, service_name={service_name}, service_id={service_id}, '
+                                'service_type={service_type}, '
+                                'service_status={status}).'.format(component=comp.name,
+                                                                   service_name=service.name,
+                                                                   service_id=service.service_id,
+                                                                   service_type=service.service_type,
+                                                                   status=service.status))
 
-                        logger.debug('Datapoint updated: (start={}, end={}, value={}) '
-                                     'for {} on {}.'.format(dp.start, dp.end, dp.value, service_id, dev))
-                    n_dps += 1
+                    parent_service.sub_services.add(service)
+                    parent_service.save()
+                    logger.info('action="Service add", status="Added", component=service,'
+                                'parent_service={parent_service}, service_name={service_name}, service_id={service_id}, '
+                                'service_type={service_type}, '
+                                'service_status={status}).'.format(parent_service=parent_service.description,
+                                                                   service_name=service.name,
+                                                                   service_id=service.service_id,
+                                                                   service_type=service.service_type,
+                                                                   status=service.status))
 
-                except MultipleObjectsReturned:
-                    logger.error('Multiple datapoints found: (start={}, end={}, value={}) '
-                                 'for {} on {}. Please remove them manually'.format(start, end, value, service_id, dev))
+                    service.save()
 
-        logger.info("Created {} datapoints of datasource '{}'".format(n_dps, data_source.name))
+                    df4 = df3[df3.PORTFORMALNAME == component]
+                    logger.info('action="Retrieving samples from dataframe", component=service, service={service}, '
+                                'device_name={device}, component_name={component}, '
+                                'samples={samples}'.format(samples=len(df4),
+                                                           datasource=datasource.name,
+                                                           device=dev.name,
+                                                           component=component,
+                                                           service=service.name))
+                    df5 = df4.set_index('TIMESTAMP')
+                    value = df5['VAL'].diff().abs().sum()
+
+                    # Compute the 95 percentile value over this dataframe
+                    value_95_pct = np.percentile(df5['VAL'].diff().abs().values, 95)
+                    datasource_95_pct = DataSource.objects.get(name="{} {}".format(datasource.name, '(95 percentile)'))
+
+                    start = df4['TIMESTAMP'].min().to_pydatetime().replace(tzinfo=utc)
+                    end = df4['TIMESTAMP'].max().to_pydatetime().replace(tzinfo=utc)
+
+                    logger.info('action="Creating DataPoints", component=datapoint, service_id={}, '
+                                'device_name={}'.format(service_id, dev))
+                    for ds, v in [(datasource, value), (datasource_95_pct, value_95_pct)]:
+                        logger.info('action="Creating DataPoints", component=datapoint, '
+                                    'datasource_name={}'.format(ds.name))
+                        try:
+                            dp, created = DataPoint.objects.get_or_create(start__range=(start, end),
+                                                                          end__range=(start, end),
+                                                                          data_source=ds, service=service,
+                                                                          defaults={'start': start, 'end': end,
+                                                                                    'value': v})
+
+                            if created is True:
+                                logger.debug('action="DataPoint create" status="Created", component=datapoint, '
+                                             'datasource_name={}, start={}, end={}, value={}, service_id={}, '
+                                             'device_name={}'.format(datasource.name, start, end, v, service_id, dev))
+                            else:
+                                logger.debug('action="DataPoint create" status="Exists", component=datapoint, '
+                                             'datasource_name={}, start={}, end={}, value={}, service_id={}, '
+                                             'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value,
+                                                                     service_id, dev))
+                                dp.start = start
+                                dp.end = end
+                                dp.value = v
+                                dp.save()
+                                logger.debug('action="DataPoint create" status="Updated", component=datapoint, '
+                                             'datasource_name={}, start={}, end={}, value={}, service_id={}, '
+                                             'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value,
+                                                                     service_id, dev))
+
+                        except MultipleObjectsReturned:
+                            logger.error('action="DataPoint create", status="MultipleObjectsReturned", '
+                                         'datasource_name={}, result="Please remove them manually", '
+                                         'component=datapoint, start={}, end={}, value={}, service_id={}, '
+                                         'device_name={}'.format(datasource.name, start, end, value, service_id, dev))
 
     def _run():
         """ Runs the port volume sync """
@@ -361,7 +515,7 @@ def get_service_volume(period):
 
         for k, v in METRIC_MAP.items():
             df = get_dataframe(_create_query(period, k))
-            _create_datapoints_from_dataframe(df, v)
+            _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             # todo: Compute percentile
 
     _run()
@@ -395,14 +549,12 @@ class Command(BaseCommand):
             "date format: YYYY-MM-DD ")
 
     def handle(self, period, *args, **options):
-        logger.debug('Syncing devices from OneControl with Bubbles')
-
         if options['sync_devices']:
-            logger.info('Skip syncing devices from OneControl with Bubbles')
+            logger.info('action="Skip syncing devices from OneControl with Bubbles"')
         else:
             sync_devices()
-            logger.info('Synced devices from OneControl with Bubbles')
-
+            logger.info(
+                'action="Synced devices from OneControl with Bubbles", status="OK", component=onecontrol_syncdb')
 
         # Create initial datasources if they didn't exist already
         datasources = {'Volume in': {'description': 'Received bytes',
@@ -412,7 +564,15 @@ class Command(BaseCommand):
                        'Volume uit': {'description': 'Transmitted bytes',
                                       'unit': 'bytes',
                                       'data_type': 'derive',
-                                      'interval': 86400}}
+                                      'interval': 86400},
+                       'Volume in (95 percentile)': {'description': 'Received bytes (95 percentile)',
+                                                     'unit': 'bytes',
+                                                     'data_type': 'derive',
+                                                     'interval': 86400},
+                       'Volume uit (95 percentile)': {'description': 'Transmitted bytes (95 percentile)',
+                                                      'unit': 'bytes',
+                                                      'data_type': 'derive',
+                                                      'interval': 86400}}
 
         for k, v in datasources.items():
             try:
@@ -429,13 +589,15 @@ class Command(BaseCommand):
                 logger.error('Returned multiple DataSource objects... This should not have happened')
 
         if options['skip_port_volume']:
-            logger.info('Skip syncing port volume from OneControl')
+            logger.info('action="Skip syncing port volume from OneControl"')
         else:
-            logger.info('Syncing port volume from OneControl')
+            logger.debug('action="Syncing port volume from OneControl"')
             get_port_volume(mkdate(period))
+            logger.debug('action="Synced port volume from OneControl", status="OK", component=port_volume')
 
         if options['skip_service_volume']:
-            logger.info('Skip syncing service volume from OneControl')
+            logger.info('action="Skip syncing service volume from OneControl"')
         else:
-            logger.info('Syncing service volume from OneControl')
+            logger.info('action="Syncing service volume from OneControl"')
             get_service_volume(mkdate(period))
+            logger.debug('action="Synced service volume from OneControl", status="OK", component=service_volume')

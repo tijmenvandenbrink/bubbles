@@ -52,6 +52,14 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'logfile': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': "{}/{}".format(LOG_ROOT, 'bubbles.log'),
+            'maxBytes': 50000000,
+            'backupCount': 2,
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django.request': {
@@ -59,8 +67,8 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        '   bubbles.custom': {
-            'handlers': ['console'],
+        'bubbles.custom': {
+            'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         }
     }

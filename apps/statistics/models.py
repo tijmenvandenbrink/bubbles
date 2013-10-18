@@ -1,12 +1,8 @@
 from django.db import models
-from django.core.exceptions import ValidationError
-from django.core.exceptions import NON_FIELD_ERRORS
 
 from taggit.managers import TaggableManager
 
-from apps.components.models import Component
-from apps.devices.models import Device
-from apps.services.models import Service
+from ..services.models import Service
 
 # GAUGE
 # is for things like temperatures or number of people in a room or the value of a RedHat share.

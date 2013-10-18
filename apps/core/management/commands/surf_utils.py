@@ -76,24 +76,27 @@ class SurfSoap:
         return self.surfdb
 
 
-def get_service_type(service_id):
-    from _surf_settings import SERVICE_TYPE_MAP
+def get_service_info_from_string(service_id):
+    """
+    :param s: Service id
+    :type s: String
+    :return: Dictionary
+    """
     import re
 
-    m = re.match(r"(?P<service_id>\d{4})(?P<service_type>\w{2})(?P<seq>\d?)", service_id)
+    m = re.match(r"(?P<service_id>\d{4})(?P<service_type>\w{2})(?P<seq>\d*)(?P<suffix>\S*)", service_id)
+    result = {'service_id': 'Unknown',
+              'service_type': 'Unknown',
+              'seq': 'Unknown',
+              'suffix': 'Unknown'
+    }
 
     if m:
-        return SERVICE_TYPE_MAP.get(m.group('service_type'), 'unknown')
+        result = m.groupdict()
+        for k, v in result.items():
+            if v == '':
+                result[k] = 'Unknown'
 
-    return 'unknown'
+        return result
 
-
-def get_service_id(service_id):
-    import re
-
-    m = re.match(r"(?P<service_id>\d{4})(?P<service_type>\w{2})(?P<seq>\d?)", service_id)
-
-    if m:
-        return m.group('service_id')
-
-    return 'unknown'
+    return result

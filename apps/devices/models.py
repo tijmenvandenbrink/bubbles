@@ -16,3 +16,13 @@ class Device(Timestamped):
 
     def __unicode__(self):
         return "{0}".format(self.name)
+
+    def _get_major_software_version(self):
+        """ Returns the major software version. """
+        try:
+            version = int(self.software_version.split('-')[1])
+            return version
+        except:
+            raise Exception('VersionError')
+
+    major_software_version = property(_get_major_software_version)

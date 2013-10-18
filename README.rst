@@ -12,7 +12,7 @@ Installation
 ============
 
 Normal Installation
-----------------------------------
+-------------------
 
 Create a virtualenv and clone from github
 
@@ -25,7 +25,7 @@ Create a virtualenv and clone from github
         pip install -r bubbles/requirements/requirements.txt
 
 Syncdb
-----------------------------------
+------
 
 Sync the database with the generic settings file
 
@@ -44,43 +44,53 @@ Run
 
 
 
-================================
 Services
-================================
+========
 
 Service Types
-=====
+-------------
 
-  * Customer Services
-  * * EPL (Single service port)
-  * * EVPL (Multiple services port)
-  * * ELAN
+* Customer Service Types
+  - IP Unprotected
+  - IP Protected
+  - IP Resilient
+  - Static LP (Unprotected)
+  - Static LP (Protected)
+  - Static LP (Resilient)
+  - Dynamic LP (Unprotected)
+  - Dynamic LP (Protected)
+  - Dynamic LP (Resilient)
+  - VLAN
+* Tunnel types
+  - Tunnel Unprotected
+  - Tunnel Protected
+  - Tunnel Dual-homed
+* Port types
+  - LAG
+  - Port
 
-  * Core Services
-  * * PBT TUNNELS
 
-================================
 Devices
-================================
+=======
 
   * DEVICE -> Get information from SystemNode table in OneControl database
 
-================================
+
 Components
-================================
+==========
 
 Component Types
-======
+---------------
 
-  * INTERFACES (UUID: DEVICE MAC + PORTFORMALNAME)
-  * AGGREGATES (UUID: DEVICE MAC + PORTFORMALNAME)
+  * INTERFACES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)
+  * AGGREGATES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)
 
-================================
+
 Reporting
-================================
+=========
 
 Report Types
-======
+------------
 
   SHORT TERM
 
@@ -99,29 +109,28 @@ Report Types
   * * SystemNode TABLE
 
 
-================================
 Commands
-================================
+========
 
 Sync with SURFnet Customer Database
-======
+-----------------------------------
 
 django-admin.py surf_syncdb --settings=bubbles.settings.local --pythonpath=<your project path>
 
 
 Sync with Ciena OneControl
-======
+--------------------------
 
 django-admin.py onecontrol_syncdb <YYYY-MM-DD> --settings=bubbles.settings.local --pythonpath=<your project path>
 
 
 Import legacy SURFnet Volume Reports
-======
+------------------------------------
 
 django-admin.py surf_legacy_import <filename> <filename2> ... --settings=bubbles.settings.local --pythonpath=<your project path>
 
 
 Upload to SURFnet VERS
-======
+----------------------
 
 django-admin.py upload2vers <YYYY-MM> --settings=bubbles.settings.local --pythonpath=<your project path>

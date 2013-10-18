@@ -40,6 +40,8 @@ USE_TZ = True
 
 PROJECT_ROOT = Path(__file__).ancestor(3)
 
+LOG_ROOT = PROJECT_ROOT.child('log')
+
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = PROJECT_ROOT.child('media')
