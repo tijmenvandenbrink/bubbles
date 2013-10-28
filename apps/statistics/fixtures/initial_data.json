@@ -1,0 +1,46 @@
+[
+    {
+        "pk": 1,
+        "model": "statistics.datasource",
+        "fields": {
+            "data_type": "derive",
+            "interval": 86400,
+            "name": "Volume in",
+            "unit": "bytes",
+            "description": "Received bytes"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "statistics.datasource",
+        "fields": {
+            "data_type": "derive",
+            "interval": 86400,
+            "name": "Volume uit",
+            "unit": "bytes",
+            "description": "Transmitted bytes"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "statistics.datasource",
+        "fields": {
+            "data_type": "derive",
+            "interval": 86400,
+            "name": "Volume in (95 percentile)",
+            "unit": "bytes",
+            "description": "Received bytes (95 percentile)"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "statistics.datasource",
+        "fields": {
+            "data_type": "derive",
+            "interval": 86400,
+            "name": "Volume uit (95 percentile)",
+            "unit": "bytes",
+            "description": "Transmitted bytes (95 percentile)"
+        }
+    }
+]
