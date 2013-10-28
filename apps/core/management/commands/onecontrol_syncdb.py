@@ -50,10 +50,11 @@ def run_query(query):
         :param query: MySQL query
         :type query: string
     """
-    logger.debug('action="Setup MySQL client connection", host={}, port={}, user={}, database={}'.format(ONECONTROLHOST,
-                                                                                                         ONECONTROLDBPORT,
-                                                                                                         ONECONTROLDBUSER,
-                                                                                                         ONECONTROLDB))
+    logger.debug('action="Setup MySQL client connection", host={}, '
+                 'port={}, user={}, database={}'.format(ONECONTROLHOST,
+                                                        ONECONTROLDBPORT,
+                                                        ONECONTROLDBUSER,
+                                                        ONECONTROLDB))
     con = mdb.connect(host=ONECONTROLHOST, port=int(ONECONTROLDBPORT), user=ONECONTROLDBUSER,
                       passwd=ONECONTROLDBPASSWORD, db=ONECONTROLDB)
 
@@ -77,10 +78,11 @@ def get_dataframe(query):
         :param query: MySQL query
         :type query: string
     """
-    logger.debug('action="Setup MySQL client connection", host={}, port={}, user={}, database={}'.format(ONECONTROLHOST,
-                                                                                                         ONECONTROLDBPORT,
-                                                                                                         ONECONTROLDBUSER,
-                                                                                                         ONECONTROLDB))
+    logger.debug('action="Setup MySQL client connection", host={}, '
+                 'port={}, user={}, database={}'.format(ONECONTROLHOST,
+                                                        ONECONTROLDBPORT,
+                                                        ONECONTROLDBUSER,
+                                                        ONECONTROLDB))
     con = mdb.connect(host=ONECONTROLHOST, port=int(ONECONTROLDBPORT), user=ONECONTROLDBUSER,
                       passwd=ONECONTROLDBPASSWORD, db=ONECONTROLDB)
 
@@ -191,7 +193,6 @@ def get_port_volume(period):
         :param df: Pandas dataframe which hold all the stats for a certain metric
         :type df: pandas.core.frame.DataFrame
         """
-        n_dps = 0
         for pollid in df['POLLID'].unique():
             df2 = df[df.POLLID == pollid]
 
@@ -225,7 +226,8 @@ def get_port_volume(period):
                                                                                name='Port'),
                                                                            'status': ServiceStatus.objects.get(
                                                                                name='Production'),
-                                                                 })
+                                                                 }
+                )
 
                 if created is True:
                     logger.info(
@@ -295,15 +297,11 @@ def get_port_volume(period):
                             logger.debug('action="DataPoint create" status="Updated", component=component, '
                                          'datasource_name={}, start={}, end={}, value={}, component_name={}, '
                                          'device_name={}'.format(ds.name, dp.start, dp.end, dp.value, comp, dev))
-                        n_dps += 1
 
                     except MultipleObjectsReturned:
                         logger.error('action="DataPoint create" status="MultipleObjectsReturned", component=component, '
                                      'datasource_name={}, start={}, end={}, value={}, component_name={}, '
                                      'device_name={}'.format(ds.name, start, end, v, comp, dev))
-
-        logger.info('action="DataPoint create", component=datapoint, datasource_name="{}", '
-                    'datapoints_total={}'.format(ds.name, n_dps))
 
     def _run():
         """ Runs the port volume sync """
