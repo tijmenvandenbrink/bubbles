@@ -1,0 +1,162 @@
+[
+    {
+        "pk": 25,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Dynamic LP (Protected)"
+        }
+    },
+    {
+        "pk": 26,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Dynamic LP (Resilient)"
+        }
+    },
+    {
+        "pk": 24,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Dynamic LP (Unprotected)"
+        }
+    },
+    {
+        "pk": 19,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "IP Protected"
+        }
+    },
+    {
+        "pk": 20,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "IP Resilient"
+        }
+    },
+    {
+        "pk": 33,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "IP Unprotected"
+        }
+    },
+    {
+        "pk": 30,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "LAG"
+        }
+    },
+    {
+        "pk": 31,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Port"
+        }
+    },
+    {
+        "pk": 22,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Static LP (Protected)"
+        }
+    },
+    {
+        "pk": 23,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Static LP (Resilient)"
+        }
+    },
+    {
+        "pk": 21,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Static LP (Unprotected)"
+        }
+    },
+    {
+        "pk": 29,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Tunnel Dual-homed"
+        }
+    },
+    {
+        "pk": 28,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Tunnel Protected"
+        }
+    },
+    {
+        "pk": 27,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Tunnel Unprotected"
+        }
+    },
+    {
+        "pk": 32,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Unknown"
+        }
+    },
+    {
+        "pk": 34,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "VLAN"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": 1000,
+            "name": "Production"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": 500,
+            "name": "Pre-production"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": 400,
+            "name": "Test"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": 300,
+            "name": "Maintenance"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": 100,
+            "name": "Reserved"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "services.servicestatus",
+        "fields": {
+            "conversion": -1,
+            "name": "Decommisioned"
+        }
+    }
+]
