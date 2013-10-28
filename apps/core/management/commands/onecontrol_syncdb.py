@@ -20,6 +20,30 @@ from surf_utils import get_service_info_from_string
 logger = logging.getLogger(__name__)
 
 
+def check_table_exists(tablename):
+    """ Checks if the table exists
+
+    """
+    con = mdb.connect(host=ONECONTROLHOST, port=int(ONECONTROLDBPORT), user=ONECONTROLDBUSER,
+                      passwd=ONECONTROLDBPASSWORD, db=ONECONTROLDB)
+
+    with con:
+        cur = con.cursor()
+        cur.execute("""
+                        SELECT COUNT(*)
+                        FROM information_schema.tables
+                        WHERE table_name = '{0}'
+                    """.format(tablename))
+    if cur.fetchone()[0] == 1:
+        logger.info('action="Check table exists", status="OK", result="TableExists", '
+                    'table={}'.format(tablename))
+        return True
+
+    logger.warning('action="Check table exists", status="OK", result="TableDoesNotExist", '
+                   'table={}'.format(tablename))
+    return False
+
+
 def run_query(query):
     """ Runs a MySQL query against the OneControl Database and returns the result
 
@@ -43,7 +67,7 @@ def run_query(query):
             logger.error('{}'.format(e))
             return ()
 
-        logger.info('action="Executing query", status="Success", query="{}"'.format(query))
+        logger.info('action="Executing query", status="OK", query="{}"'.format(query))
         return cur.fetchall()
 
 
@@ -138,8 +162,14 @@ def get_port_volume(period):
         end = "{:%Y-%m-%d 00:00:00}".format(period + timedelta(days=1))
         query = ""
 
+        tables = []
         for n in range(-1, 2):
             table = "PORTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            if check_table_exists(table):
+                tables.append(table)
+
+        i = 1
+        for table in tables:
             query += ('(SELECT POLLID, MACADDRESS, from_unixTime(TTIME / 1000) AS TIMESTAMP, VAL, PORTFORMALNAME '
                       'FROM {table} '
                       'INNER JOIN '
@@ -149,8 +179,9 @@ def get_port_volume(period):
                       'WHERE TTIME >= (UNIX_TIMESTAMP("{start}") * 1000) '
                       'AND (TTIME <= UNIX_TIMESTAMP("{end}") * 1000))').format(table=table, metric=metric,
                                                                                start=start, end=end)
-            if n < 1:
+            if i < len(tables):
                 query += ' UNION '
+                i += 1
 
         return query
 
@@ -228,41 +259,51 @@ def get_port_volume(period):
                 df4 = df3.set_index('TIMESTAMP')
                 value = df4['VAL'].diff().abs().sum()
 
-                logger.info('action="Creating DataPoints" component=component, '
-                            'component_name={}, device_name={}'.format(comp, dev))
+                # Compute the 95 percentile value over this dataframe
+                value_95_pct = np.percentile(df4['VAL'].diff().abs().values, 95)
+                datasource_95_pct = DataSource.objects.get(name="{} {}".format(datasource.name, '(95 percentile)'))
 
+                # Get the first and last sample time of the dataframe
                 start = df3['TIMESTAMP'].min().to_pydatetime().replace(tzinfo=utc)
                 end = df3['TIMESTAMP'].max().to_pydatetime().replace(tzinfo=utc)
 
-                try:
-                    dp, created = DataPoint.objects.get_or_create(start__range=(start, end), end__range=(start, end),
-                                                                  data_source=datasource, service=service,
-                                                                  defaults={'start': start, 'end': end, 'value': value})
+                logger.info('action="Creating DataPoints" component=component, '
+                            'component_name={}, device_name={}'.format(comp, dev))
 
-                    if created is True:
-                        logger.debug('action="DataPoint create" status="Created", component=component, '
-                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
-                                     'device_name={}'.format(datasource.name, start, end, value, comp, dev))
-                    else:
-                        logger.debug('action="DataPoint create" status="Exists", component=component, '
-                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
-                                     'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value, comp, dev))
-                        dp.start = start
-                        dp.end = end
-                        dp.value = value
-                        dp.save()
-                        logger.debug('action="DataPoint create" status="Updated", component=component, '
-                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
-                                     'device_name={}'.format(datasource.name, dp.start, dp.end, dp.value, comp, dev))
-                    n_dps += 1
+                for ds, v in [(datasource, value), (datasource_95_pct, value_95_pct)]:
+                    logger.info('action="Creating DataPoints", component=datapoint, '
+                                'datasource_name={}'.format(ds.name))
 
-                except MultipleObjectsReturned:
-                    logger.error('action="DataPoint create" status="MultipleObjectsReturned", component=component, '
-                                 'datasource_name={}, start={}, end={}, value={}, component_name={}, '
-                                 'device_name={}'.format(datasource.name, start, end, value, comp, dev))
+                    try:
+                        dp, created = DataPoint.objects.get_or_create(start__range=(start, end),
+                                                                      end__range=(start, end),
+                                                                      data_source=ds, service=service,
+                                                                      defaults={'start': start, 'end': end, 'value': v})
+
+                        if created is True:
+                            logger.debug('action="DataPoint create" status="Created", component=component, '
+                                         'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                         'device_name={}'.format(ds.name, start, end, v, comp, dev))
+                        else:
+                            logger.debug('action="DataPoint create" status="Exists", component=component, '
+                                         'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                         'device_name={}'.format(ds.name, dp.start, dp.end, dp.value, comp, dev))
+                            dp.start = start
+                            dp.end = end
+                            dp.value = v
+                            dp.save()
+                            logger.debug('action="DataPoint create" status="Updated", component=component, '
+                                         'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                         'device_name={}'.format(ds.name, dp.start, dp.end, dp.value, comp, dev))
+                        n_dps += 1
+
+                    except MultipleObjectsReturned:
+                        logger.error('action="DataPoint create" status="MultipleObjectsReturned", component=component, '
+                                     'datasource_name={}, start={}, end={}, value={}, component_name={}, '
+                                     'device_name={}'.format(ds.name, start, end, v, comp, dev))
 
         logger.info('action="DataPoint create", component=datapoint, datasource_name="{}", '
-                    'datapoints_total={}'.format(datasource.name, n_dps))
+                    'datapoints_total={}'.format(ds.name, n_dps))
 
     def _run():
         """ Runs the port volume sync """
@@ -271,7 +312,6 @@ def get_port_volume(period):
         for k, v in METRIC_MAP.items():
             df = get_dataframe(_create_query(period, k))
             _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
-            # todo: Compute percentile
 
     _run()
 
@@ -326,8 +366,14 @@ def get_service_volume(period):
         end = "{:%Y-%m-%d 00:00:00}".format(period + timedelta(days=1))
         query = ""
 
+        tables = []
         for n in range(-1, 2):
             table = "SERVICEENDPOINTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            if check_table_exists(table):
+                tables.append(table)
+
+        i = 1
+        for table in tables:
             query += ('(SELECT '
                       'POLLID, '
                       'VS, '
@@ -345,8 +391,10 @@ def get_service_volume(period):
                       'WHERE TTIME >= (UNIX_TIMESTAMP("{start}") * 1000) '
                       'AND (TTIME <= UNIX_TIMESTAMP("{end}") * 1000))').format(table=table, metric=metric,
                                                                                start=start, end=end)
-            if n < 1:
+
+            if i < len(tables):
                 query += ' UNION '
+                i += 1
 
         return query
 
@@ -463,6 +511,8 @@ def get_service_volume(period):
                                                            device=dev.name,
                                                            component=component,
                                                            service=service.name))
+
+                    # Create an index on the TIMESTAMP column
                     df5 = df4.set_index('TIMESTAMP')
                     value = df5['VAL'].diff().abs().sum()
 
@@ -470,6 +520,7 @@ def get_service_volume(period):
                     value_95_pct = np.percentile(df5['VAL'].diff().abs().values, 95)
                     datasource_95_pct = DataSource.objects.get(name="{} {}".format(datasource.name, '(95 percentile)'))
 
+                    # Get the first and last sample time of the dataframe
                     start = df4['TIMESTAMP'].min().to_pydatetime().replace(tzinfo=utc)
                     end = df4['TIMESTAMP'].max().to_pydatetime().replace(tzinfo=utc)
 
@@ -516,7 +567,6 @@ def get_service_volume(period):
         for k, v in METRIC_MAP.items():
             df = get_dataframe(_create_query(period, k))
             _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
-            # todo: Compute percentile
 
     _run()
 
@@ -555,38 +605,6 @@ class Command(BaseCommand):
             sync_devices()
             logger.info(
                 'action="Synced devices from OneControl with Bubbles", status="OK", component=onecontrol_syncdb')
-
-        # Create initial datasources if they didn't exist already
-        datasources = {'Volume in': {'description': 'Received bytes',
-                                     'unit': 'bytes',
-                                     'data_type': 'derive',
-                                     'interval': 86400},
-                       'Volume uit': {'description': 'Transmitted bytes',
-                                      'unit': 'bytes',
-                                      'data_type': 'derive',
-                                      'interval': 86400},
-                       'Volume in (95 percentile)': {'description': 'Received bytes (95 percentile)',
-                                                     'unit': 'bytes',
-                                                     'data_type': 'derive',
-                                                     'interval': 86400},
-                       'Volume uit (95 percentile)': {'description': 'Transmitted bytes (95 percentile)',
-                                                      'unit': 'bytes',
-                                                      'data_type': 'derive',
-                                                      'interval': 86400}}
-
-        for k, v in datasources.items():
-            try:
-                datasource, created = DataSource.objects.get_or_create(name=k,
-                                                                       description=v['description'],
-                                                                       unit=v['unit'],
-                                                                       data_type=v['data_type'],
-                                                                       interval=v['interval'])
-                if created is True:
-                    logger.info('Created new datasource: {0} '.format(datasource))
-                else:
-                    logger.debug('Datasource exists: {0}'.format(datasource))
-            except MultipleObjectsReturned:
-                logger.error('Returned multiple DataSource objects... This should not have happened')
 
         if options['skip_port_volume']:
             logger.info('action="Skip syncing port volume from OneControl"')
