@@ -259,6 +259,7 @@ def get_port_volume(period):
 
                 df3 = df2[df2.PORTFORMALNAME == component]
                 df4 = df3.set_index('TIMESTAMP')
+                logger.debug('action="Check number of samples", status="OK", result="{} samples"'.format(len(df4)))
                 value = df4['VAL'].diff().abs().sum()
 
                 # Compute the 95 percentile value over this dataframe
@@ -512,6 +513,7 @@ def get_service_volume(period):
 
                     # Create an index on the TIMESTAMP column
                     df5 = df4.set_index('TIMESTAMP')
+                    logger.debug('action="Check number of samples", status="OK", result="{} samples"'.format(len(df5)))
                     value = df5['VAL'].diff().abs().sum()
 
                     # Compute the 95 percentile value over this dataframe
