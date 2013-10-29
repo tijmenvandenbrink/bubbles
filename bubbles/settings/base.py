@@ -123,4 +123,5 @@ INSTALLED_APPS = (
     'apps.services',
     'apps.statistics',
     'taggit',
+    'gunicorn',
 )
