@@ -39,7 +39,7 @@ def check_table_exists(tablename):
                     'table="{}"'.format(tablename))
         return True
 
-    logger.warning('action="Check table exists", status="OK", result="TableDoesNotExist", '
+    logger.warning('action="Check table exists", status="Failed", result="TableDoesNotExist", '
                    'table="{}"'.format(tablename))
     return False
 
@@ -169,9 +169,13 @@ def get_port_volume(period):
 
         tables = []
         for n in range(-1, 2):
-            table = "PORTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            table = "PORTSTATS{:%-m_%-d_%Y}".format(period + timedelta(days=n))
             if check_table_exists(table):
                 tables.append(table)
+
+        if len(tables) == 0:
+            logger.warning('action="Constructing query", status="Failed", result="No tables exist"')
+            raise ValueError("No tables exist")
 
         i = 1
         for table in tables:
@@ -312,8 +316,12 @@ def get_port_volume(period):
         METRIC_MAP = {'portTxBytes': 'Volume uit', 'portRxBytes': 'Volume in'}
 
         for k, v in METRIC_MAP.items():
-            df = get_dataframe(_create_query(period, k))
-            _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
+            try:
+                query = _create_query(period, k)
+                df = get_dataframe(query)
+                _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
+            except ValueError:
+                logger.error('action="Constructing query", status="Failed", result="No tables exist"')
 
     _run()
 
@@ -370,9 +378,13 @@ def get_service_volume(period):
 
         tables = []
         for n in range(-1, 2):
-            table = "SERVICEENDPOINTSTATS{}".format("{:%m_%d_%Y}".format(period + timedelta(days=n)).lstrip('0'))
+            table = "SERVICEENDPOINTSTATS{:%-m_%-d_%Y}".format(period + timedelta(days=n))
             if check_table_exists(table):
                 tables.append(table)
+
+        if len(tables) == 0:
+            logger.warning('action="Constructing query", status="Failed", result="No tables exist"')
+            raise ValueError("No tables exist")
 
         i = 1
         for table in tables:
@@ -570,8 +582,12 @@ def get_service_volume(period):
         METRIC_MAP = {'uniTxBytes': 'Volume uit', 'uniRxBytes': 'Volume in'}
 
         for k, v in METRIC_MAP.items():
-            df = get_dataframe(_create_query(period, k))
-            _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
+            try:
+                query = _create_query(period, k)
+                df = get_dataframe(query)
+                _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
+            except ValueError:
+                logger.error('action="Constructing query", status="Failed", result="No tables exist"')
 
     _run()
 
