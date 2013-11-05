@@ -521,7 +521,7 @@ def get_service_volume(period):
 
                     df4 = df3[df3.PORTFORMALNAME == component]
                     logger.info('action="Retrieving samples from dataframe", component="service", service="{service}", '
-                                'device_name="{device}", component_name="{component}", '
+                                'device_name="{device}", component_name="{component}", datasource="{datasource}", '
                                 'samples="{samples}"'.format(samples=len(df4),
                                                              datasource=datasource.name,
                                                              device=dev.name,
