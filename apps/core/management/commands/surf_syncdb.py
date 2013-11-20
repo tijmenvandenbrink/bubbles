@@ -82,8 +82,9 @@ def sync_objects(data):
                 if services.count() == 0:
                     logger.warning('action="Service get", status="ServiceDoesNotExist", result="The service was not '
                                    'found in the Bubbles database, but does exist in IDD. Please investigate", '
-                                   'component="service", service_id="{obj["service_id"]}, '
-                                   'service_description={obj["omschrijving"]}"'.format(obj=obj))
+                                   'component="service", service_id="{service_id}", '
+                                   'service_description="{description}"'.format(service_id=obj['service_id'],
+                                                                                description=obj["omschrijving"]))
                     continue
 
                 # Connect the services to the organization
@@ -95,7 +96,7 @@ def sync_objects(data):
                     logger.info('action="Relationship create", status="created", component="service", '
                                 'service_name="{svc.name}", service_id="{svc.service_id}", '
                                 'service_type="{svc.service_type}", service_status="{svc.status}"), '
-                                'organization_name="{org.name}", organization_id="{org.id}, '
+                                'organization_name="{org.name}", organization_id="{org.id}", '
                                 'organization_abbreviation="{org.abbreviation}""'.format(svc=service, org=org))
 
             else:
