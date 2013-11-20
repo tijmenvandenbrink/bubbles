@@ -97,7 +97,7 @@ def sync_objects(data):
                                 'service_name="{svc.name}", service_id="{svc.service_id}", '
                                 'service_type="{svc.service_type}", service_status="{svc.status}"), '
                                 'organization_name="{org.name}", organization_id="{org.id}", '
-                                'organization_abbreviation="{org.abbreviation}""'.format(svc=service, org=org))
+                                'organization_abbreviation="{org.org_abbreviation}""'.format(svc=service, org=org))
 
             else:
                 logger.error('action="Identify IDD object", status="Failed", result="This object will not be synced", '
