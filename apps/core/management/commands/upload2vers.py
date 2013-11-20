@@ -2,7 +2,7 @@ from suds.client import Client
 from suds.transport.http import HttpTransport
 from suds.xsd.doctor import Import, ImportDoctor
 from decimal import Decimal, getcontext
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib2
 import calendar
 import logging
@@ -11,8 +11,10 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Sum
 from django.utils.timezone import utc
 
-from apps.statistics.models import DataPoint
+from apps.statistics.models import DataPoint, DataSource
+from apps.services.models import Service
 from apps.core.utils import mkdate
+from apps.core.management.commands.surf_utils import create_ip_service_groups, populate_ip_service_groups
 from _surf_settings import *
 
 logger = logging.getLogger(__name__)
@@ -71,6 +73,63 @@ class VersClient():
                 setattr(parameters, key, value)
 
         return self.client.service.er_DeleteReport(username, password, parameters)
+
+
+def upload_to_vers(period, services, datasources):
+    """ Uploads the sum of DataPoints of a specific DataSource
+        for all given Services during a certain period.
+
+    :param period: Period over which to report
+    :type period: datetime
+    :param services: Services which need to be reported on
+    :type services: Queryset of Service objects
+    :param datasources: DataSource which need to be reported on
+    :type datasources: Queryset of DataSource objects
+    """
+    for ds in datasources:
+        for service in services:
+            result = service.get_datapoints(ds, recursive=True
+            ).filter(start__gte=datetime(period.year,
+                                         period.month, 1).replace(tzinfo=utc),
+                     end__lte=(datetime(period.year, period.month,
+                                        calendar.monthrange(period.year,
+                                                            period.month)[1]) + timedelta(days=1)
+                     ).replace(tzinfo=utc),
+            ).aggregate(total=Sum('value'))
+
+            if not result:
+                logger.warning('action="Datapoints retrieve", status="NoDataPointsFound", component="service", '
+                               'result="Nothing to upload to VERS", service_name="{svc.name}", '
+                               'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                               'service_status="{svc.status}", datasource_name="{ds.name}", '
+                               'period="{period.year}{period.month}").'.format(svc=service, ds=ds, period=period))
+                continue
+
+            logger.info('action="Datapoints retrieve", status="OK", component="service", '
+                        'result="Nothing to upload to VERS", service_name="{svc.name}", '
+                        'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}", datasource_name="{ds.name}", '
+                        'period="{period.year}{period.month}").'.format(svc=service, ds=ds, period=period))
+
+            client = VersClient(wsdl_url=VERS_WSDL_URLS[service.service_type]['url'])
+            logger.debug('action="SOAP client create", status="OK"')
+
+            for org in service.organization.all():
+                result = client.insert_report(VERS_WSDL_URLS[service.service_type]['username'], # todo VERS_WSDL_URLS
+                                              VERS_WSDL_URLS[service.service_type]['password'],
+                                              Value=Decimal(result['total'] / 1e+9).quantize(Decimal('.01'),
+                                                                                             rounding="ROUND_HALF_UP"),
+                                              Unit="", NormComp="", NormValue="", Type=ds.name,
+                                              Instance=service.name, DepartmentList="NWD",
+                                              Period="{:%Y-%m}".format(period),
+                                              Organisation=org.name, IsKPI=False, Remark="")
+
+                if result.ReturnCode < 0:
+                    logger.error('action="VERS upload", status="Failed", result="{}", '
+                                 'return_code="{}"'.format(result.ReturnText, result.ReturnCode))
+                else:
+                    logger.debug('action="VERS upload", status="OK", result="{}", '
+                                 'return_code="{}"'.format(result.ReturnText, result.ReturnCode))
 
 
 def upload_volume_stats(action, period, service_type):
@@ -208,10 +267,11 @@ class Command(BaseCommand):
         :param period: date (YYYY-MM)
         :type period: string
         """
-        # todo: Create a command that exports availability/volume data to VERS
-
         if report_type == 'ip_volume':
-            upload_volume_stats(action, mkdate(period), 'IP Interface')
+            create_ip_service_groups()
+            populate_ip_service_groups()
+            upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name__startswith='IP'
+            ), DataSource.objects.filter(name__contains='Volume'))
             logger.info("Finished ip volume upload")
         elif report_type == 'ip_availability':
             ip_availability(action, mkdate(period))

@@ -12,7 +12,6 @@ from ....organizations.models import Organization
 from ....services.models import Service
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
-from ....core.utils import mkdate, get_derived_value
 
 logger = logging.getLogger(__name__)
 

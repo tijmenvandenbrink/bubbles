@@ -134,3 +134,12 @@ Upload to SURFnet VERS
 ----------------------
 
 django-admin.py upload2vers <YYYY-MM> --settings=bubbles.settings.local --pythonpath=<your project path>
+
+
+Todo
+====
+  * Upload_to_vers we can't do recursive=true because LP services have both ends of the LP. We need to resolve this somewhere
+  * Add junipers and create relationships.
+  * service description / port description
+  * What happens when a service moved from dev A to dev B????
+     * new service created with new service_id on new device

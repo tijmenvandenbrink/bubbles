@@ -14,7 +14,7 @@ from ....components.models import Component
 from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
-from ....core.utils import mkdate
+from ....core.utils import mkdate, update_obj
 from surf_utils import get_service_info_from_string
 
 logger = logging.getLogger(__name__)
@@ -123,27 +123,20 @@ def sync_devices():
                                                                  'software_version': row[4],
                                                                  'device_type': row[1], 'name': row[2]})
         if created is True:
-            logger.info('action="Device create", status="Created", component="device", device_name="{0.name}", '
-                        'system_node_key="{0.system_node_key}", pbbte_bridge_mac="{0.pbbte_bridge_mac}", '
-                        'device_type="{0.device_type}", ip="{0.ip}", '
-                        'software_version="{0.software_version}"'.format(device))
+            logger.info('action="Device create", status="Created", component="device", device_name="{dev.name}", '
+                        'system_node_key="{dev.system_node_key}", pbbte_bridge_mac="{dev.pbbte_bridge_mac}", '
+                        'device_type="{dev.device_type}", ip="{dev.ip}", '
+                        'software_version="{dev.software_version}"'.format(dev=device))
         else:
-            logger.info('action="Device create", status="Exists", component="device", device_name="{0.name}", '
-                        'system_node_key="{0.system_node_key}", pbbte_bridge_mac="{0.pbbte_bridge_mac}", '
-                        'device_type="{0.device_type}", ip="{0.ip}", '
-                        'software_version="{0.software_version}"'.format(device))
+            logger.info('action="Device create", status="Exists", component="device", device_name="{dev.name}", '
+                        'system_node_key="{dev.system_node_key}", pbbte_bridge_mac="{dev.pbbte_bridge_mac}", '
+                        'device_type="{dev.device_type}", ip="{dev.ip}", '
+                        'software_version="{dev.software_version}"'.format(dev=device))
 
             defaults = {'system_node_key': row[0], 'ip': row[3], 'software_version': row[4],
                         'device_type': row[1], 'name': row[2]}
 
-            for k, v in defaults.items():
-                if not getattr(device, k) == v:
-                    setattr(device, k, v)
-                    logger.info('action="Device create", status="Updated", component="device", device_name="{}", '
-                                'attribute="{}", oldvalue="{}", newvalue="{}"'.format(device.name, k,
-                                                                                      getattr(device, k), v))
-
-                device.save()
+            update_obj(device, **defaults)
 
 
 def get_port_volume(period):
@@ -216,12 +209,10 @@ def get_port_volume(period):
                 comp, created = Component.objects.get_or_create(name=component, device=dev)
                 if created is True:
                     logger.info('action="Component create", status="Created", component="component", '
-                                'component_name="{component_name}", '
-                                'device_name="{device_name}"'.format(component_name=comp.name, device_name=dev.name))
+                                'component_name="{comp.name}", device_name="{dev.name}"'.format(comp=comp, dev=dev))
                 else:
                     logger.info('action="Component create", status="Exists", component="component", '
-                                'component_name="{component_name}", '
-                                'device_name="{device_name}"'.format(component_name=comp.name, device_name=dev.name))
+                                'component_name="{comp.name}", device_name="{dev.name}"'.format(comp=comp, dev=dev))
 
                 service, created = Service.objects.get_or_create(service_id='{}_{}'.format(dev.pbbte_bridge_mac,
                                                                                            component),
@@ -237,31 +228,21 @@ def get_port_volume(period):
                 )
 
                 if created is True:
-                    logger.info(
-                        'action="Service create", status="Created", component="service", service_name="{service_name}", '
-                        'service_id="{service_id}", service_type="{service_type}", '
-                        'service_status="{status}").'.format(service_name=service.name,
-                                                             service_id=service.service_id,
-                                                             service_type=service.service_type,
-                                                             status=service.status))
+                    logger.info('action="Service create", status="Created", component="service", '
+                                'service_name="{svc.name}", service_id="{svc.service_id}", '
+                                'service_type="{svc.service_type}", service_status="{svc.status}").'.format(
+                        svc=service))
                 else:
-                    logger.info(
-                        'action="Service create", status="Exists", component="service", service_name="{service_name}", '
-                        'service_id="{service_id}", service_type="{service_type}", '
-                        'service_status="{status}").'.format(service_name=service.name,
-                                                             service_id=service.service_id,
-                                                             service_type=service.service_type,
-                                                             status=service.status))
+                    logger.info('action="Service create", status="Exists", component="service", '
+                                'service_name="{svc.name}", service_id="{svc.service_id}", '
+                                'service_type="{svc.service_type}", service_status="{svc.status}").'.format(
+                        svc=service))
 
                 service.component.add(comp)
                 logger.info('action="Component add" status="Added", component="service", '
-                            'component_name="{component}", service_name="{service_name}", service_id="{service_id}", '
-                            'service_type="{service_type}", '
-                            'service_status="{status}").'.format(component=comp.name,
-                                                                 service_name=service.name,
-                                                                 service_id=service.service_id,
-                                                                 service_type=service.service_type,
-                                                                 status=service.status))
+                            'component_name="{comp.name}", service_name="{svc.name}", service_id="{svc.service_id}", '
+                            'service_type="{svc.service_type}", '
+                            'service_status="{svc.status}").'.format(comp=comp, svc=service))
                 service.save()
 
                 df3 = df2[df2.PORTFORMALNAME == component]
@@ -335,30 +316,25 @@ def get_service_volume(period):
 
     def _get_or_create_parent_service(service_id):
         service_info = get_service_info_from_string(service_id)
-        service, created = Service.objects.get_or_create(service_id="{}".format(service_id),
-                                                         description="{} Parent Service".format(service_id),
-                                                         defaults={'name': service_id,
+        parent_service_id = "{}{}".format(service_info['service_id'], service_info['service_type'])
+        service, created = Service.objects.get_or_create(service_id=parent_service_id,
+                                                         description="{} Parent Service".format(parent_service_id),
+                                                         defaults={'name': parent_service_id,
                                                                    'service_type': ServiceType.objects.get(
                                                                        name=SERVICE_TYPE_MAP[
                                                                            service_info.get('service_type')]),
                                                                    'status': ServiceStatus.objects.get(
                                                                        name='Production'),
-                                                                   'report_on': False})
+                                                                   'report_on': True})
 
         if created is True:
             logger.info('action="Parent service created" status="OK", component="service", '
-                        'service_name="{service_name}", service_id="{service_id}", service_type="{service_type}", '
-                        'service_status="{status}").'.format(service_name=service.name,
-                                                             service_id=service.service_id,
-                                                             service_type=service.service_type,
-                                                             status=service.status))
+                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}").'.format(svc=service))
         else:
             logger.info('action="Parent service exists" status="OK", component="service", '
-                        'service_name="{service_name}", service_id="{service_id}", service_type="{service_type}", '
-                        'service_status="{status}").'.format(service_name=service.name,
-                                                             service_id=service.service_id,
-                                                             service_type=service.service_type,
-                                                             status=service.status))
+                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}").'.format(svc=service))
 
         return service, created
 
@@ -457,14 +433,11 @@ def get_service_volume(period):
                     comp, created = Component.objects.get_or_create(name=component, device=dev)
                     if created is True:
                         logger.info('action="Component create", status="Created", component="service", '
-                                    'component_name="{component_name}", '
-                                    'device_name="{device_name}"'.format(component_name=comp.name,
-                                                                         device_name=dev.name))
+                                    'component_name="{comp.name}", '
+                                    'device_name="{dev.name}"'.format(comp=comp, dev=dev))
                     else:
                         logger.info('action="Component create" status="Exists", component="service", '
-                                    'component_name="{component_name}" '
-                                    'device_name="{device_name}"'.format(component_name=comp.name,
-                                                                         device_name=dev.name))
+                                    'component_name="{comp.name}" device_name="{dev.name}"'.format(comp=comp, dev=dev))
 
                     service, created = Service.objects.get_or_create(service_id="{}_{}".format(dev.pbbte_bridge_mac,
                                                                                                service_id),
@@ -480,43 +453,29 @@ def get_service_volume(period):
                                                                      })
 
                     if created is True:
-                        logger.info(
-                            'action="Service create", status="Created", component="service", '
-                            'service_name="{service_name}", service_id="{service_id}", service_type="{service_type}", '
-                            'service_status="{status}").'.format(service_name=service.name,
-                                                                 service_id=service.service_id,
-                                                                 service_type=service.service_type,
-                                                                 status=service.status))
+                        logger.info('action="Service create", status="Created", component="service", '
+                                    'service_name="{svc.name}", service_id="{svc.service_id}", '
+                                    'service_type="{svc.service_type}", service_status="{svc.status}").'.format(
+                            svc=service))
                     else:
-                        logger.info(
-                            'action="Service create", status="Exists", component="service", '
-                            'service_name="{service_name}", service_id="{service_id}", service_type="{service_type}", '
-                            'service_status="{status}").'.format(service_name=service.name,
-                                                                 service_id=service.service_id,
-                                                                 service_type=service.service_type,
-                                                                 status=service.status))
+                        logger.info('action="Service create", status="Exists", component="service", '
+                                    'service_name="{svc.name}", service_id="{svc.service_id}", '
+                                    'service_type="{svc.service_type}", service_status="{svc.status}").'.format(
+                            svc=service))
 
                     service.component.add(comp)
                     logger.info('action="Component add" status="Added", component="service", '
-                                'component_name="{component}", service_name="{service_name}", '
-                                'service_id="{service_id}",service_type="{service_type}", '
-                                'service_status="{status}").'.format(component=comp.name,
-                                                                     service_name=service.name,
-                                                                     service_id=service.service_id,
-                                                                     service_type=service.service_type,
-                                                                     status=service.status))
+                                'component_name="{comp.name}", service_name="{svc.name}", '
+                                'service_id="{svc.service_id}",service_type="{svc.service_type}", '
+                                'service_status="{svc.status}").'.format(comp=comp, svc=service))
 
                     parent_service.sub_services.add(service)
                     parent_service.save()
                     logger.info('action="Service add", status="Added", component="service",'
-                                'parent_service="{parent_service}", service_name="{service_name}", '
-                                'service_id="{service_id}", service_type="{service_type}", '
-                                'service_status="{status}").'.format(parent_service=parent_service.description,
-                                                                     service_name=service.name,
-                                                                     service_id=service.service_id,
-                                                                     service_type=service.service_type,
-                                                                     status=service.status))
-
+                                'parent_service="{psvc.description}", service_name="{svc.name}", '
+                                'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                                'service_status="{svc.status}").'.format(psvc=parent_service,
+                                                                         svc=service))
                     service.save()
 
                     df4 = df3[df3.PORTFORMALNAME == component]

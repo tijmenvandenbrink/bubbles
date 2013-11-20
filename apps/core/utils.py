@@ -3,12 +3,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def calculate_percentile():
-    """ Calculate percentile on data set. """
-    # todo: Create logic to calculate percentile
-    pass
-
-
 def consolidate():
     """
     """
@@ -156,3 +150,20 @@ def calculate_availability(start, end, duration):
     result = (1.0 - (duration.total_seconds() / total.total_seconds())) * 100
 
     return result
+
+
+def update_obj(obj, **kwargs):
+    """ Updates an object with kwargs and returns the object
+
+    :param obj: Object
+    :type obj: Object
+    :return: Object
+    """
+    for k, v in kwargs.items():
+        if not getattr(obj, k) == v:
+            logger.info('action="Object update", status="OK", object_id="{obj.id}", object="{obj}", '
+                        'attribute="{attribute}", oldvalue="{oldvalue}", '
+                        'newvalue="{newvalue}"'.format(obj=obj, attribute=k, oldvalue=getattr(obj, k), newvalue=v))
+            setattr(obj, k, v)
+    obj.save()
+    return obj

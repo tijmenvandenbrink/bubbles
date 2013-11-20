@@ -21,6 +21,13 @@
         }
     },
     {
+        "pk": 35,
+        "model": "services.servicetype",
+        "fields": {
+            "name": "Group"
+        }
+    },
+    {
         "pk": 19,
         "model": "services.servicetype",
         "fields": {

@@ -2,6 +2,12 @@ from time import time
 import cPickle as pickle
 import sys
 import logging
+from datetime import timedelta
+
+from apps.devices.models import Device
+from apps.services.models import ServiceType
+from apps.statistics.models import DataPoint, DataSource
+from apps.core.management.commands._surf_settings import METRIC_SWAP
 
 logger = logging.getLogger(__name__)
 
@@ -100,3 +106,129 @@ def get_service_info_from_string(service_id):
         return result
 
     return result
+
+
+def create_ip_service_groups():
+    """ Creates the service groups defined in _surf_settings.SERVICE_GROUPS.
+
+    """
+    from apps.services.models import Service, ServiceType, ServiceStatus
+    from _surf_settings import IP_SERVICE_GROUPS
+
+    for k, v in IP_SERVICE_GROUPS.items():
+        service, created = Service.objects.get_or_create(service_id=k,
+                                                         defaults={'name': v, 'description': v,
+                                                                   'service_type': ServiceType.objects.get(
+                                                                       name='Group'),
+                                                                   'status': ServiceStatus.objects.get(
+                                                                       name='Production'),
+                                                         }
+        )
+
+        if created is True:
+            logger.info('action="Service create", status="Created", component="service", '
+                        'service_name="{svc.name}", service_id="{svc.service_id}", '
+                        'service_type="{svc.service_type}", service_status="{svc.status}").'.format(svc=service))
+        else:
+            logger.info('action="Service create", status="Exists", component="service", '
+                        'service_name="{svc.name}", service_id="{svc.service_id}", '
+                        'service_type="{svc.service_type}", service_status="{svc.status}").'.format(svc=service))
+
+
+def populate_ip_service_groups():
+    """ Puts IP interface services in their matching group (based on service description)
+
+    """
+    from apps.services.models import Service
+    from _surf_settings import IP_SERVICE_GROUPS
+
+    for k, v in IP_SERVICE_GROUPS.items():
+        psvc = Service.objects.get(service_id=k)
+        psvc.sub_services.add(*Service.objects.filter(service_type__name__contains='IP', description__contains=v))
+
+
+def fix_missing_datapoints_saos6(start, end, copy=True):
+    """ Saos 6 devices only have the uniRxBytes counter implemented. So for LPs we need to correlate side A uniRxBytes
+        to side B uniTxBytes. What goes out of side A comes in on side B and vice versa. Parent services have
+        child services that may exist on Saos6 or Saos7 devices or a mix. So we have 4 possibilities:
+
+                       Side A   Side B
+        Situation 1    Saos6    Saos6
+        Situation 2    Saos6    Saos7
+        Situation 3    Saos7    Saos6
+        Situation 4    Saos7    Saos7
+
+        Situation 2, 3 and 4 we'll just take the first Saos7 device in alphabetical order.
+        For situation 1 we need to do some swapping:
+
+        Side B uniTxBytes = Side A uniRxBytes
+        Side A uniTxBytes = Side B uniRxBytes
+
+        This method iterates over all Saos6 devices and tries to complete the stats for the services running over it.
+
+        :param start: Datapoint start
+        :type start: datetime
+        :param end: Datapoint end
+        :type end: Datapoint end
+    """
+
+    def _get_candidate_datapoints(service, start, end):
+        dps = DataPoint.objects.none()
+        for candidate_service in service.get_other_side():
+            for k, v in METRIC_SWAP.items():
+                dps = dps | DataPoint.objects.filter(data_source__name=k, start__range=(start, end),
+                                                     end__range=(start, end),
+                                                     service=candidate_service)
+
+        logger.info('action="Find candidate datapoints", status="OK", component="service", service="{svc.service_id}", '
+                    'candidate_service="{csvc.service_id}", datapoints="{dps}"'.format(svc=service,
+                                                                                       csvc=candidate_service,
+                                                                                       dps=dps.count()))
+        return dps
+
+    def _copy_candidate_datapoints(datapoints, service):
+        stats = {'copied': 0,
+                 'updated': 0}
+        for datapoint in datapoints:
+            dp, created = DataPoint.objects.get_or_create(start=datapoint.start, end=datapoint.end,
+                                                          data_source=DataSource.objects.get(
+                                                              name=METRIC_SWAP[datapoint.data_source.name]),
+                                                          service=service, value=datapoint.value)
+
+            if created is True:
+                logger.debug('action="DataPoint copy" status="Copied", component="service", '
+                             'datasource_name="{dp.data_source.name}", start="{dp.start}", end="{dp.end}", '
+                             'value="{dp.value}", service_id="{svc.service_id}"'.format(dp=datapoint, svc=service))
+                stats['copied'] += 1
+            else:
+                logger.debug('action="DataPoint copy" status="Exists", component="service", '
+                             'datasource_name="{dp.data_source.name}", start="{dp.start}", end="{dp.end}", '
+                             'value="{dp.value}", service_id="{svc.service_id}"'.format(dp=datapoint, svc=service))
+
+                dp.start = datapoint.start
+                dp.end = datapoint.end
+                dp.value = datapoint.value
+                dp.save()
+                logger.debug('action="DataPoint copy" status="Updated", component="service", '
+                             'datasource_name="{dp.data_source.name}", start="{dp.start}", end="{dp.end}", '
+                             'value="{dp.value}", service_id="{svc.service_id}"'.format(dp=datapoint, svc=service))
+                stats['updated'] += 1
+
+        logger.info('action="DataPoints copy", status="OK", component="service", '
+                    'component_name="{comp.name}", service_name="{svc.name}", service_id="{svc.service_id}", '
+                    'service_type="{svc.service_type}", service_status="{svc.status}", '
+                    'device_name="{dev.name}", device_software_version="{dev.software_version}", copied="{copied}", '
+                    'updated="{updated}"'.format(svc=service, comp=service.component.all()[0],
+                                                 dev=service.component.all()[0].device, copied=stats['copied'],
+                                                 updated=stats['updated']))
+
+    for device in Device.objects.filter(software_version__contains='saos-06'):
+        for component in device.component_set.all():
+            for service in component.service_set.all():
+                if not service.service_type in ServiceType.objects.filter(name__contains='LP'):
+                    continue
+
+                if copy:
+                    _copy_candidate_datapoints(_get_candidate_datapoints(service, start, end), service)
+                else:
+                    return _get_candidate_datapoints(service, start, end)
