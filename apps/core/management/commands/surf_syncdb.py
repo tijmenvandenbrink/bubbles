@@ -30,11 +30,11 @@ def sync_objects(data):
                 org = update_obj(org, **defaults)
                 if created:
                     logger.info('action="Organization create", status="Created", component="organization", '
-                                'org_id="{org.id}", organization_name="{org.name}", '
+                                'org_id="{org.org_id}", organization_name="{org.name}", '
                                 'organization_abbreviation="{org.org_abbreviation}"'.format(org=org))
                 else:
                     logger.info('action="Organization create", status="Updated", component="organization", '
-                                'org_id="{org.id}", organization_name="{org.name}", '
+                                'org_id="{org.org_id}", organization_name="{org.name}", '
                                 'organization_abbreviation="{org.org_abbreviation}"'.format(org=org))
 
                 defaults = {'name': obj['interfacenaam'], 'description': obj['omschrijving'],
@@ -61,7 +61,7 @@ def sync_objects(data):
                 logger.info('action="Relationship create", status="created", component="service", '
                             'service_name="{svc.name}", service_id="{svc.service_id}", '
                             'service_type="{svc.service_type}", service_status="{svc.status}"), '
-                            'organization_name="{org.name}", organization_id="{org.id}, '
+                            'organization_name="{org.name}", organization_id="{org.org_id}, '
                             'organization_abbreviation="{org.org_abbreviation}""'.format(svc=service, org=org))
 
             # LP Interfaces
@@ -71,11 +71,11 @@ def sync_objects(data):
                 org = update_obj(org, **defaults)
                 if created:
                     logger.info('action="Organization create", status="Created", component="organization", '
-                                'org_id="{org.id}", organization_name="{org.name}", '
+                                'org_id="{org.org_id}", organization_name="{org.name}", '
                                 'organization_abbreviation="{org.org_abbreviation}"'.format(org=org))
                 else:
                     logger.info('action="Organization create", status="Updated", component="organization", '
-                                'org_id="{org.id}", organization_name="{org.name}", '
+                                'org_id="{org.org_id}", organization_name="{org.name}", '
                                 'organization_abbreviation="{org.org_abbreviation}"'.format(org=org))
 
                 services = Service.objects.filter(service_id__contains=obj['service_id'])
@@ -96,7 +96,7 @@ def sync_objects(data):
                     logger.info('action="Relationship create", status="created", component="service", '
                                 'service_name="{svc.name}", service_id="{svc.service_id}", '
                                 'service_type="{svc.service_type}", service_status="{svc.status}"), '
-                                'organization_name="{org.name}", organization_id="{org.id}", '
+                                'organization_name="{org.name}", organization_id="{org.org_id}", '
                                 'organization_abbreviation="{org.org_abbreviation}""'.format(svc=service, org=org))
 
             else:

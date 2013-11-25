@@ -45,7 +45,7 @@ class Service(Timestamped):
     tags = TaggableManager(blank=True)
 
     def __unicode__(self):
-        return "{0}".format(self.name)
+        return "{0}".format(self.service_id)
 
     def _has_sub_services(self):
         """ Returns True if service has sub_services. False otherwise.
@@ -59,8 +59,10 @@ class Service(Timestamped):
 
     def get_datapoints(self, data_source, recursive=False, dedup=False):
         """ Returns a QuerySet of DataPoint objects of a given DataSource. With recursive=True all DataPoint
-        objects of sub_services will also be returned. With dedup=True we take care of duplicate DataPoints. This is
-        useful for Services of LP service type (e.g. Static/Dynamic LP (Resilient, Protected, Unprotected)).
+        objects of sub_services will also be returned.
+
+        With recursive=True and dedup=True we take care of duplicate DataPoints. This is useful for Services of LP
+        service type (e.g. Static/Dynamic LP (Resilient, Protected, Unprotected)).
 
         :param data_source: the DataSource for which to get the DataPoints
         :type data_source: DataSource object
@@ -71,6 +73,7 @@ class Service(Timestamped):
 
         :returns: QuerySet
         """
+        #todo dedup=True
         result = self.datapoint_set.filter(data_source=data_source)
         if recursive:
             # To eliminate the possibility of having loops we're recording the service_ids we already processed.

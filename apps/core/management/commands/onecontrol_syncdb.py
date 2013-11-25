@@ -15,7 +15,7 @@ from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
 from ....core.utils import mkdate, update_obj
-from surf_utils import get_service_info_from_string
+from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos6
 
 logger = logging.getLogger(__name__)
 
@@ -572,6 +572,11 @@ class Command(BaseCommand):
                                                          dest='skip_service_volume',
                                                          default=False,
                                                          help='Skip service volume'),
+                                             make_option('--fix-missing-datapoints',
+                                                         action='store_true',
+                                                         dest='fix_missing_datapoints',
+                                                         default=False,
+                                                         help='Fix missing datapoints on SAOS6 devices'),
     )
 
     args = 'date'
@@ -599,3 +604,9 @@ class Command(BaseCommand):
             logger.info('action="Syncing service volume from OneControl"')
             get_service_volume(mkdate(period))
             logger.debug('action="Synced service volume from OneControl", status="OK", component="service_volume"')
+
+        if options['fix_missing_datapoints']:
+            logger.info('action="Fix missing datapoints on SAOS6 devices"')
+            start = mkdate(period)
+            end = start + timedelta(days=1)
+            fix_missing_datapoints_saos6(start, end)
