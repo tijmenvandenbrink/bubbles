@@ -573,9 +573,9 @@ class Command(BaseCommand):
                                                          default=False,
                                                          help='Skip service volume'),
                                              make_option('--fix-missing-datapoints',
-                                                         action='store_true',
+                                                         action='store_false',
                                                          dest='fix_missing_datapoints',
-                                                         default=False,
+                                                         default=True,
                                                          help='Fix missing datapoints on SAOS6 devices'),
     )
 
