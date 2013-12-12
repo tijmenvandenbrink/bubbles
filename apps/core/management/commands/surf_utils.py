@@ -174,15 +174,20 @@ def fix_missing_datapoints_saos6(start, end, copy=True):
 
     def _get_candidate_datapoints(service, start, end):
         dps = DataPoint.objects.none()
-        for candidate_service in service.get_other_side():
-            for k, v in METRIC_SWAP.items():
-                dps = dps | DataPoint.objects.filter(data_source__name=k, start__range=(start, end),
-                                                     end__range=(start, end),
-                                                     service=candidate_service)
+        candidate_services = service.get_other_side()
+        if len(candidate_services) == 0:
+            logger.warning('action="Find candidate datapoints", status="Failed", component="service", '
+                           'service="{svc.service_id}", result="No candidate services found"'.format(svc=service))
+        else:
+            for candidate_service in candidate_services:
+                for k, v in METRIC_SWAP.items():
+                    dps = dps | DataPoint.objects.filter(data_source__name=k, start__range=(start, end),
+                                                         end__range=(start, end),
+                                                         service=candidate_service)
 
-            logger.info('action="Find candidate datapoints", status="OK", component="service", '
-                        'service="{svc.service_id}", candidate_service="{csvc.service_id}", '
-                        'datapoints="{dps}"'.format(svc=service, csvc=candidate_service, dps=dps.count()))
+                logger.info('action="Find candidate datapoints", status="OK", component="service", '
+                            'service="{svc.service_id}", candidate_service="{csvc.service_id}", '
+                            'datapoints="{dps}"'.format(svc=service, csvc=candidate_service, dps=dps.count()))
         return dps
 
     def _copy_candidate_datapoints(datapoints, service):
