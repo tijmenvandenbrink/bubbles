@@ -180,10 +180,9 @@ def fix_missing_datapoints_saos6(start, end, copy=True):
                                                      end__range=(start, end),
                                                      service=candidate_service)
 
-        logger.info('action="Find candidate datapoints", status="OK", component="service", service="{svc.service_id}", '
-                    'candidate_service="{csvc.service_id}", datapoints="{dps}"'.format(svc=service,
-                                                                                       csvc=candidate_service,
-                                                                                       dps=dps.count()))
+            logger.info('action="Find candidate datapoints", status="OK", component="service", '
+                        'service="{svc.service_id}", candidate_service="{csvc.service_id}", '
+                        'datapoints="{dps}"'.format(svc=service, csvc=candidate_service, dps=dps.count()))
         return dps
 
     def _copy_candidate_datapoints(datapoints, service):
