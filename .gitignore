@@ -8,6 +8,7 @@
 # Directories #
 ###############
 logs/
+bubbles/log/
 .idea/
 
 # SURFnet Specific files #
