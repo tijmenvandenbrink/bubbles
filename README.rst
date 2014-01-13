@@ -2,7 +2,7 @@ Bubbles is a Django project that focuses on reporting on services. It aims to be
 tries not to make assumptions on what the definition of a service is.
 
 Installation
-~~~~~~~~~~~~
+============
 
 Using django-configurations
 ---------------------------
@@ -43,7 +43,7 @@ Sync the database
         django-admin.py migrate
 
 Run
-~~~~
+----
 
 .. code-block:: console
 
@@ -54,7 +54,7 @@ Commands
 --------
 
 Sync with SURFnet Customer Database
-===================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
 
@@ -62,7 +62,7 @@ Sync with SURFnet Customer Database
 
 
 Sync with Ciena OneControl
-==========================
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
 
@@ -70,7 +70,7 @@ Sync with Ciena OneControl
 
 
 Import legacy SURFnet Volume Reports
-====================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
 
@@ -78,7 +78,7 @@ Import legacy SURFnet Volume Reports
 
 
 Upload to SURFnet VERS
-======================
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
 
@@ -86,9 +86,9 @@ Upload to SURFnet VERS
 
 
 Todo
-~~~~
+====
   * Upload_to_vers we can't do recursive=true because LP services have both ends of the LP. We need to resolve this somewhere
   * Add junipers and create relationships.
   * service description / port description
-  * What happens when a service moved from dev A to dev B????
+  * What happens when a service moved from dev A to dev B?
      * new service created with new service_id on new device

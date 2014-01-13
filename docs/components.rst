@@ -1,5 +1,5 @@
 Components
-~~~~~~~~~~
+==========
 
 Component Types
 ---------------
