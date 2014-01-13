@@ -6,10 +6,10 @@ Contents:
 .. toctree::
 :maxdepth: 2
 
-    Devices
-    Components
-    Services
-    Reporting
+    devices
+    components
+    services
+    reporting
 
 
 Indices and tables
