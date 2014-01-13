@@ -26,3 +26,6 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *~
+
+# Docs
+docs/_build

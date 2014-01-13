@@ -11,12 +11,27 @@ tries not to make assumptions on what the definition of a service is.
 Installation
 ============
 
+Using django-configurations
+---------------------------
+
+This project uses django-configurations and requires the below environment variables to be set.
+
+* DJANGO_CONFIGURATION=Dev|Prod
+* DJANGO_SECRET_KEY="Specify your key here"
+* BUBBLES_DATABASE_URL="mysql://username:password@localhost:3306/db"
+* DJANGO_SETTINGS_MODULE="bubbles.settings.settings"
+
+You'll also need to change a few lines to your manage.py as described here:
+
+http://django-configurations.readthedocs.org/en/latest/
+
+
 Normal Installation
 -------------------
 
 Create a virtualenv and clone from github
 
-    ::
+.. code-block:: console
 
         virtualenv bubbles-venv
         git clone git://github.com/tijmenvandenbrink/bubbles.git
@@ -27,20 +42,19 @@ Create a virtualenv and clone from github
 Syncdb
 ------
 
-Sync the database with the generic settings file
+Sync the database
 
-    ::
+.. code-block:: console
 
-        django-admin.py syncdb --settings=bubbles.settings.generic --pythonpath=<your project path>
-        django-admin.py migrate --settings=bubbles.settings.generic --pythonpath=<your project path>
-
+        django-admin.py syncdb
+        django-admin.py migrate
 
 Run
 =====
 
-    ::
+.. code-block:: console
 
-        django-admin runserver 8000 --settings=bubbles.settings.generic --pythonpath=<your project path>
+        django-admin runserver 8000
 
 
 
@@ -115,25 +129,33 @@ Commands
 Sync with SURFnet Customer Database
 -----------------------------------
 
-django-admin.py surf_syncdb --settings=bubbles.settings.local --pythonpath=<your project path>
+.. code-block:: console
+
+    django-admin.py surf_syncdb
 
 
 Sync with Ciena OneControl
 --------------------------
 
-django-admin.py onecontrol_syncdb <YYYY-MM-DD> --settings=bubbles.settings.local --pythonpath=<your project path>
+.. code-block:: console
+
+    django-admin.py onecontrol_syncdb
 
 
 Import legacy SURFnet Volume Reports
 ------------------------------------
 
-django-admin.py surf_legacy_import <filename> <filename2> ... --settings=bubbles.settings.local --pythonpath=<your project path>
+.. code-block:: console
+
+    django-admin.py surf_legacy_import <filename> <filename2> ...
 
 
 Upload to SURFnet VERS
 ----------------------
 
-django-admin.py upload2vers <YYYY-MM> --settings=bubbles.settings.local --pythonpath=<your project path>
+.. code-block:: console
+
+    django-admin.py upload2vers <YYYY-MM>
 
 
 Todo
