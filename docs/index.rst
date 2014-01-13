@@ -1,15 +1,17 @@
 Welcome to Bubbles's documentation!
 ===================================
 
+.. include:: ../README.rst
+
 Contents:
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
-            devices
-            components
-            services
-            reporting
+    devices
+    components
+    services
+    reporting
 
 
 Indices and tables
@@ -18,5 +20,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. include:: ../README.rst
