@@ -4,7 +4,7 @@ Welcome to Bubbles's documentation!
 Contents:
 
 .. toctree::
-:maxdepth: 2
+    :maxdepth: 2
 
             devices
             components
