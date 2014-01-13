@@ -1,25 +1,18 @@
-================================
-Bubbles - Service Reporting
-================================
-
-About
-=====
-
 Bubbles is a Django project that focuses on reporting on services. It aims to be flexible in what is reported on and
 tries not to make assumptions on what the definition of a service is.
 
 Installation
-============
+~~~~~~~~~~~~
 
 Using django-configurations
 ---------------------------
 
-This project uses django-configurations and requires the below environment variables to be set.
+This project uses django-configurations and requires the below environment variables to be set.::
 
-* DJANGO_CONFIGURATION=Dev|Prod
-* DJANGO_SECRET_KEY="Specify your key here"
-* BUBBLES_DATABASE_URL="mysql://username:password@localhost:3306/db"
-* DJANGO_SETTINGS_MODULE="bubbles.settings.settings"
+    DJANGO_CONFIGURATION=Dev|Prod
+    DJANGO_SECRET_KEY="Specify your key here"
+    BUBBLES_DATABASE_URL="mysql://username:password@localhost:3306/db"
+    DJANGO_SETTINGS_MODULE="bubbles.settings.settings"
 
 You'll also need to change a few lines to your manage.py as described here:
 
@@ -50,84 +43,18 @@ Sync the database
         django-admin.py migrate
 
 Run
-=====
+~~~~
 
 .. code-block:: console
 
         django-admin runserver 8000
 
 
-
-Services
-========
-
-Service Types
--------------
-
-* Customer Service Types
-  - IP Unprotected
-  - IP Protected
-  - IP Resilient
-  - Static LP (Unprotected)
-  - Static LP (Protected)
-  - Static LP (Resilient)
-  - Dynamic LP (Unprotected)
-  - Dynamic LP (Protected)
-  - Dynamic LP (Resilient)
-  - VLAN
-* Tunnel types
-  - Tunnel Unprotected
-  - Tunnel Protected
-  - Tunnel Dual-homed
-* Port types
-  - LAG
-  - Port
-
-
-Devices
-=======
-
-  * DEVICE -> Get information from SystemNode table in OneControl database
-
-
-Components
-==========
-
-Component Types
----------------
-
-  * INTERFACES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)
-  * AGGREGATES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)
-
-
-Reporting
-=========
-
-Report Types
-------------
-
-  SHORT TERM
-
-  * Port/Service Volume Reporting (Monthly)
-  * Service Availability Reporting (Monthly)
-
-  ROADMAP
-
-  * Service Y1731 Reporting (Monthly)
-
-  What do we have to play with?
-  * ESMDB
-  * * PORTSTATS TABLE
-  * * SERVICEENDPOINTSTATS TABLE
-  * * PolledData TABLE
-  * * SystemNode TABLE
-
-
 Commands
-========
+--------
 
 Sync with SURFnet Customer Database
------------------------------------
+===================================
 
 .. code-block:: console
 
@@ -135,7 +62,7 @@ Sync with SURFnet Customer Database
 
 
 Sync with Ciena OneControl
---------------------------
+==========================
 
 .. code-block:: console
 
@@ -143,7 +70,7 @@ Sync with Ciena OneControl
 
 
 Import legacy SURFnet Volume Reports
-------------------------------------
+====================================
 
 .. code-block:: console
 
@@ -151,7 +78,7 @@ Import legacy SURFnet Volume Reports
 
 
 Upload to SURFnet VERS
-----------------------
+======================
 
 .. code-block:: console
 
@@ -159,7 +86,7 @@ Upload to SURFnet VERS
 
 
 Todo
-====
+~~~~
   * Upload_to_vers we can't do recursive=true because LP services have both ends of the LP. We need to resolve this somewhere
   * Add junipers and create relationships.
   * service description / port description

@@ -1,0 +1,8 @@
+Components
+~~~~~~~~~~
+
+Component Types
+---------------
+
+  * INTERFACES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)
+  * AGGREGATES (UUID: PBBTEBRIDGEMAC + PORTFORMALNAME)

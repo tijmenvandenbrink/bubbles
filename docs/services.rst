@@ -1,9 +1,8 @@
-========
 Services
 ========
 
 Service Types
-=============
+-------------
 
 * Customer Service Types
   - IP Unprotected
@@ -25,5 +24,5 @@ Service Types
   - Port
 
 Naming convention
-=================
+-----------------
 
