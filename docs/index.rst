@@ -8,10 +8,14 @@ Contents:
 .. toctree::
     :maxdepth: 3
 
+    core
     devices
+    organizations
     components
     services
+    statistics
     reporting
+
 
 
 Indices and tables
