@@ -2,7 +2,6 @@ from time import time
 import cPickle as pickle
 import sys
 import logging
-from datetime import timedelta
 
 from apps.devices.models import Device
 from apps.services.models import ServiceType
@@ -84,8 +83,8 @@ class SurfSoap:
 
 def get_service_info_from_string(service_id):
     """
-    :param s: Service id
-    :type s: String
+    :param service_id: Service id
+    :type service_id: String
     :return: Dictionary
     """
     import re
@@ -236,3 +235,83 @@ def fix_missing_datapoints_saos6(start, end, copy=True):
                     _copy_candidate_datapoints(_get_candidate_datapoints(service, start, end), service)
                 else:
                     return _get_candidate_datapoints(service, start, end)
+
+
+def overlap(l1, l2):
+    """ Look for overlapping intervals between two lists.
+    Each list consist of lists with a start and end datetime objects:
+    [[start, end], [start, end], ....]
+    Any or both lists may be empty.
+
+    :param l1: List containing lists with a start and end datetime object
+    :type l1: List
+    :param l2: List containing lists with a start and end datetime object
+    :type l2: List
+
+    :returns: List
+
+    A1       e1[0]------e1[1]                               e1[0] <= e2[0] and e1[1] <= e2[0]
+                                e2[0]------e2[1]
+                                                                   OR
+
+    A2                          e1[0]------e1[1]            e1[0] >= e2[1] and e1[1] >= e2[1]
+             e2[0]------e2[1]
+
+
+    B1       e1[0]------e1[1]                               e1[0] <= e2[0] and e1[1] <= e2[1]
+                    e2[0]------e2[1]
+                                                                 OR
+
+    B2              e1[0]------e1[1]                        e1[0] >= e2[0] and e1[1] >= e2[1]
+             e2[0]------e2[1]
+
+
+    C1       e1[0]--------------------e1[1]                 e1[0] <= e2[0] and e1[1] >= e2[1]
+                  e2[0]------e2[1 ]
+                                                                 OR
+
+    C2              e1[0]-----e1[1]                         e1[0] >= e2[0] and e1[1] <= e2[1]
+            e2[0]---------------------e2[1]
+
+    Situation A1 -> No overlap
+    Situation A2 -> No overlap
+    Situation B1 -> start = e2[0], end = e1[1]
+    Situation B2 -> start = e1[0], end = e2[1]
+    Situation C1 -> start = e2[0], end = e2[1]
+    Situation C2 -> start = e1[0], end = e1[1]
+    """
+    result = []
+    for e1 in l1:
+        for e2 in l2:
+            if (e1[0] <= e2[0] and e1[1] <= e2[0]) or (e1[0] >= e2[1] and e1[1] >= e2[1]):  #A1 and A2
+                continue
+            elif e1[0] <= e2[0] and e1[1] <= e2[1]:                                         #B1
+                start = e2[0]
+                end = e1[1]
+            elif e1[0] >= e2[0] and e1[1] >= e2[1]:                                         #B2
+                start = e1[0]
+                end = e2[1]
+            elif e1[0] <= e2[0] and e1[1] >= e2[1]:                                         #C1
+                start = e2[0]
+                end = e2[1]
+            elif e1[0] >= e2[0] and e1[1] <= e2[1]:                                         #C2
+                start = e1[0]
+                end = e1[1]
+            else:
+                return result
+
+            result.append([start, end])
+
+    return result
+
+
+def calc_availability(start, end, duration):
+    """ Return availability percentage
+        start, end are datetime objects and represents the period
+        over which the availability should be calculated.
+        duration is a timedelta object
+    """
+    total = end - start
+    result = (1.0 - (duration.total_seconds() / total.total_seconds())) * 100
+
+    return result

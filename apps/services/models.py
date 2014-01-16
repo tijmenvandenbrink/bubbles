@@ -64,8 +64,9 @@ class Service(Timestamped):
             logger.info('action="Find preferred child service", status="PreferredChildFound", component="service", '
                         'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
                         'service_status="{svc.status}", preferred_child_name="{child_svc.name}",'
-                        'preferred_child_id="{child_svc.service_id}"'.format(svc=self, child_svc=self.sub_services[0]))
-            return self.sub_services[0]
+                        'preferred_child_id="{child_svc.service_id}"'.format(svc=self,
+                                                                             child_svc=self.sub_services.all()[0]))
+            return self.sub_services.all()[0]
 
         result = False
         for service in self.sub_services.all():

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import urllib2
 import calendar
 import logging
+from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Sum
@@ -75,7 +76,7 @@ class VersClient():
         return self.client.service.er_DeleteReport(username, password, parameters)
 
 
-def upload_to_vers(period, services, datasources):
+def upload_to_vers(period, services, datasources, dry):
     """ Uploads the sum of DataPoints of a specific DataSource
         for all given Services during a certain period.
 
@@ -85,6 +86,8 @@ def upload_to_vers(period, services, datasources):
     :type services: Queryset of Service objects
     :param datasources: DataSource which need to be reported on
     :type datasources: Queryset of DataSource objects
+    :param dry: Don't actually do the upload or delete
+    "type dry: Boolean
     """
     for ds in datasources:
         for service in services:
@@ -96,27 +99,42 @@ def upload_to_vers(period, services, datasources):
                                                             period.month)[1]) + timedelta(days=1)
                      ).replace(tzinfo=utc),
             ).aggregate(total=Sum('value'))
+            logger.info('action="Datapoints retrieve", component="service", '
+                        'result="{result}", service_name="{svc.name}", '
+                        'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}", datasource_name="{ds.name}", '
+                        'period="{period.year}-{period.month}").'.format(result=result, svc=service, ds=ds, period=period))
 
-            if not result:
+            if not result['total']:
                 logger.warning('action="Datapoints retrieve", status="NoDataPointsFound", component="service", '
                                'result="Nothing to upload to VERS", service_name="{svc.name}", '
                                'service_id="{svc.service_id}", service_type="{svc.service_type}", '
                                'service_status="{svc.status}", datasource_name="{ds.name}", '
-                               'period="{period.year}{period.month}").'.format(svc=service, ds=ds, period=period))
+                               'period="{period.year}-{period.month}").'.format(svc=service, ds=ds, period=period))
                 continue
 
-            logger.info('action="Datapoints retrieve", status="OK", component="service", '
-                        'result="Nothing to upload to VERS", service_name="{svc.name}", '
-                        'service_id="{svc.service_id}", service_type="{svc.service_type}", '
-                        'service_status="{svc.status}", datasource_name="{ds.name}", '
-                        'period="{period.year}{period.month}").'.format(svc=service, ds=ds, period=period))
+            try:
+                url = VERS_WSDL_URLS[service.service_type.name]['url']
+            except KeyError:
+                logger.error('action="SOAP url lookup", status="Failed", result="URL not found for servicetype", '
+                             'service_type="{}"'.format(service.service_type))
 
-            client = VersClient(wsdl_url=VERS_WSDL_URLS[service.service_type]['url'])
+            client = VersClient(wsdl_url=url)
             logger.debug('action="SOAP client create", status="OK"')
 
+            if not service.organization.all():
+                logger.error('action="IdentifyOrganization", status="OrganizationNotFound", component="service", '
+                             'result="No organization found for service", service_name="{svc.name}", '
+                             'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                             'service_status="{svc.status}", datasource_name="{ds.name}", '
+                             'period="{period.year}-{period.month}").'.format(result=result, svc=service, ds=ds, period=period))
+
             for org in service.organization.all():
-                result = client.insert_report(VERS_WSDL_URLS[service.service_type]['username'], # todo VERS_WSDL_URLS
-                                              VERS_WSDL_URLS[service.service_type]['password'],
+                if dry:
+                    continue
+
+                result = client.insert_report(VERS_WSDL_URLS[service.service_type.name]['username'], # todo VERS_WSDL_URLS
+                                              VERS_WSDL_URLS[service.service_type.name]['password'],
                                               Value=Decimal(result['total'] / 1e+9).quantize(Decimal('.01'),
                                                                                              rounding="ROUND_HALF_UP"),
                                               Unit="", NormComp="", NormValue="", Type=ds.name,
@@ -250,13 +268,30 @@ def lp_availability(action, period):
 
 
 class Command(BaseCommand):
-    args = "action report_type period"
+    option_list = BaseCommand.option_list + (make_option('-t', '--report-type',
+                                                         dest='report_type',
+                                                         default='all',
+                                                         help='Specify report type (e.g. ip_volume, ip_availability, '
+                                                              'lp_volume, lp_availability'),
+                                             make_option('-a', '--action',
+                                                         dest='action',
+                                                         default='insert',
+                                                         help='Specify action (e.g. insert to upload to VERS or delete '
+                                                              'to delete from VERS'),
+                                             make_option('-d', '--dry',
+                                                         action='store_true',
+                                                         dest='dry',
+                                                         default=False,
+                                                         help="Don't actually do the upload"),
+    )
+
+    args = "period"
     help = ("Uploads availability/volume reports to VERS for a specific time period (default=monthly)"
             "action can be: insert, delete"
             "type can be: ip_volume, ip_availability, lp_volume, lp_availability"
             "date format: YYYY-MM")
 
-    def handle(self, action, report_type, period, *args, **options):
+    def handle(self, period, *args, **options):
         """
         Uploads availability/volume reports to VERS for a specific time period (default=monthly)
 
@@ -267,30 +302,34 @@ class Command(BaseCommand):
         :param period: date (YYYY-MM)
         :type period: string
         """
-        if report_type == 'ip_volume':
+        REPORT_TYPES = ['ip_volume', 'ip_availability', 'lp_volume', 'lp_availability', 'all']
+
+        def ip_volume():
             create_ip_service_groups()
             populate_ip_service_groups()
             upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name__startswith='IP'
-            ), DataSource.objects.filter(name__contains='Volume'))
+            ), DataSource.objects.filter(name__contains='Volume'), options['dry'])
             logger.info("Finished ip volume upload")
-        elif report_type == 'ip_availability':
-            ip_availability(action, mkdate(period))
-            logger.info("Finished ip availability upload")
-        elif report_type == 'lp_volume':
-            #todo get_volume_report_candidate
-            upload_volume_stats(action, mkdate(period), 'lp')
+
+        def lp_volume():
+            services = []
+            for service in Service.objects.filter(report_on=True, service_type__name__contains='LP',
+                                                  description__contains='Parent'):
+                services.append(service._preferred_child)
+            upload_to_vers(mkdate(period), services, DataSource.objects.filter(name__contains='Volume'), options['dry'])
             logger.info("Finished lp volume upload")
-        elif report_type == 'lp_availability':
-            lp_availability(action, mkdate(period))
-            logger.info("Finished lp availability upload")
-        elif report_type == 'all':
-            upload_volume_stats(action, mkdate(period), 'IP Interface')
-            logger.info("Finished ip volume upload")
-            upload_volume_stats(action, mkdate(period), 'lp')
-            logger.info("Finished lp volume upload")
-            ip_availability(action, mkdate(period))
-            logger.info("Finished ip availability upload")
-            lp_availability(action, mkdate(period))
-            logger.info("Finished lp availability upload")
-        else:
-            logger.error("report_type argument not valid: {}".format(report_type))
+
+        if options['report_type']:
+            logger.info('action="upload2vers", status="OK", report_type="{}"'.format(options['report_type']))
+
+        if options['report_type'] == 'ip_volume':
+            ip_volume()
+
+        if options['report_type'] == 'lp_volume':
+            lp_volume()
+
+        if options['report_type'] == 'all':
+            ip_volume()
+            lp_volume()
+        if not options['report_type'] in REPORT_TYPES:
+            logger.error("report_type argument not valid: {}".format(options['report_type']))
