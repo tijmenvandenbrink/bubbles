@@ -277,6 +277,7 @@ class Command(BaseCommand):
             ip_availability(action, mkdate(period))
             logger.info("Finished ip availability upload")
         elif report_type == 'lp_volume':
+            #todo get_volume_report_candidate
             upload_volume_stats(action, mkdate(period), 'lp')
             logger.info("Finished lp volume upload")
         elif report_type == 'lp_availability':

@@ -47,39 +47,69 @@ class Service(Timestamped):
     def __unicode__(self):
         return "{0}".format(self.service_id)
 
-    def _has_sub_services(self):
-        """ Returns True if service has sub_services. False otherwise.
+    def _preferred_child(self):
+        """ Returns the preferred child service according to the following criteria:
+
+        1. Prefer a service running on a saos7 device over a saos6 device (saos6 is not collecting uniTxBytes)
+        2. If both services run on saos7 devices choose the service running on the device first in alphabetical order
+        3. If neither runs on saos7 devices choose the service running on the saos6 device first in alphabetical order
+
+        This function is used to work around an issue with Ciena saos6 software version not collecting uniTxBytes
         """
-        if self.sub_services.count() > 0:
-            return True
-        else:
-            return False
+        if not self.sub_services:
+            raise Service.DoesNotExist
 
-    has_sub_services = property(_has_sub_services)
+        # If we only have one sub_service then return that service
+        if self.sub_services.count() == 1:
+            logger.info('action="Find preferred child service", status="PreferredChildFound", component="service", '
+                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}", preferred_child_name="{child_svc.name}",'
+                        'preferred_child_id="{child_svc.service_id}"'.format(svc=self, child_svc=self.sub_services[0]))
+            return self.sub_services[0]
 
-    def get_datapoints(self, data_source, recursive=False, dedup=False):
+        result = False
+        for service in self.sub_services.all():
+            if not service.component.all():
+                continue
+
+            for component in service.component.all():
+                if not result:
+                    result = (component.device, service)
+                    continue
+
+                if component.device.major_software_version >= result[0].major_software_version:
+                    tmp = [(component.device, service), result]
+                    tmp.sort(reverse=True)
+                    result = tmp.pop()
+
+        if not result:
+            raise Service.DoesNotExist
+
+        logger.info('action="Find preferred child service", status="PreferredChildFound", component="service", '
+                    'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                    'service_status="{svc.status}", preferred_child_name="{child_svc.name}",'
+                    'preferred_child_id="{child_svc.service_id}"'.format(svc=self, child_svc=result[1]))
+        return result[1]
+
+    _preferred_child = property(_preferred_child)
+
+    def get_datapoints(self, data_source, recursive=False):
         """ Returns a QuerySet of DataPoint objects of a given DataSource. With recursive=True all DataPoint
         objects of sub_services will also be returned.
-
-        With recursive=True and dedup=True we take care of duplicate DataPoints. This is useful for Services of LP
-        service type (e.g. Static/Dynamic LP (Resilient, Protected, Unprotected)).
 
         :param data_source: the DataSource for which to get the DataPoints
         :type data_source: DataSource object
         :param recursive: Include DataPoints from sub_services
         :type recursive: Boolean
-        :param dedup: Remove duplicate DataPoints
-        :type dedup: Boolean
 
         :returns: QuerySet
         """
-        #todo dedup=True
         result = self.datapoint_set.filter(data_source=data_source)
         if recursive:
             # To eliminate the possibility of having loops we're recording the service_ids we already processed.
             path = set()
             path.add(self)
-            if self.has_sub_services:
+            if self.sub_services.all():
                 for service in self.sub_services.all():
                     if service in path:
                         logger.warning('action="Detect service loop", status="LoopFound", component="service", '
@@ -98,7 +128,7 @@ class Service(Timestamped):
 
             Side A <--------> Side B
 
-            This method returns the other side. In case we found
+            This method returns the other side.
         """
         # Only LP services have services on both sides
         if not self.service_type in ServiceType.objects.filter(name__contains='LP'):

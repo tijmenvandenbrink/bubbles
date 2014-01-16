@@ -175,7 +175,7 @@ def fix_missing_datapoints_saos6(start, end, copy=True):
     def _get_candidate_datapoints(service, start, end):
         dps = DataPoint.objects.none()
         candidate_services = service.get_other_side()
-        if len(candidate_services) == 0:
+        if not candidate_services:
             logger.warning('action="Find candidate datapoints", status="Failed", component="service", '
                            'service="{svc.service_id}", result="No candidate services found"'.format(svc=service))
         else:
