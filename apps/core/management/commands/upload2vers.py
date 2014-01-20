@@ -271,11 +271,14 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (make_option('-t', '--report-type',
                                                          dest='report_type',
                                                          default='all',
+                                                         choices=['all', 'ip_volume', 'ip_availability', 'lp_volume',
+                                                                  'lp_availability'],
                                                          help='Specify report type (e.g. ip_volume, ip_availability, '
                                                               'lp_volume, lp_availability'),
                                              make_option('-a', '--action',
                                                          dest='action',
                                                          default='insert',
+                                                         choices=['insert', 'delete'],
                                                          help='Specify action (e.g. insert to upload to VERS or delete '
                                                               'to delete from VERS'),
                                              make_option('-d', '--dry',
@@ -286,10 +289,10 @@ class Command(BaseCommand):
     )
 
     args = "period"
-    help = ("Uploads availability/volume reports to VERS for a specific time period (default=monthly)"
-            "action can be: insert, delete"
-            "type can be: ip_volume, ip_availability, lp_volume, lp_availability"
-            "date format: YYYY-MM")
+    help = ("Uploads availability/volume reports to VERS for a specific time period (default=monthly)\n\n"
+            "action can be: insert, delete\n"
+            "type can be: ip_volume, ip_availability, lp_volume, lp_availability\n"
+            "period format: YYYY-MM")
 
     def handle(self, period, *args, **options):
         """
@@ -302,8 +305,6 @@ class Command(BaseCommand):
         :param period: date (YYYY-MM)
         :type period: string
         """
-        REPORT_TYPES = ['ip_volume', 'ip_availability', 'lp_volume', 'lp_availability', 'all']
-
         def ip_volume():
             create_ip_service_groups()
             populate_ip_service_groups()
@@ -331,5 +332,3 @@ class Command(BaseCommand):
         if options['report_type'] == 'all':
             ip_volume()
             lp_volume()
-        if not options['report_type'] in REPORT_TYPES:
-            logger.error("report_type argument not valid: {}".format(options['report_type']))
