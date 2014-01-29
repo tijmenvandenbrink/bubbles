@@ -15,6 +15,7 @@ Contents:
     services
     statistics
     reporting
+    utils
 
 
 

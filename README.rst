@@ -87,8 +87,21 @@ Upload to SURFnet VERS
 
 Todo
 ====
-  * Upload_to_vers we can't do recursive=true because LP services have both ends of the LP. We need to resolve this somewhere
-  * Add junipers and create relationships.
+  * Implement Celery Beat to schedule tasks
+  * Develop logic to get CFM events (from OneControl) and put them into Bubbles (LP Availability)
+  * Develop a consolidation function to eliminate data growth
+  * Implement Django-REST-framework
+  * Add IP Volume and IP Availability through REST
+  * Export XML
   * service description / port description
-  * What happens when a service moved from dev A to dev B?
+
+Q/A
+====
+
+  * What happens when a service moved from device A to B?
      * new service created with new service_id on new device
+     * new service is added to parent service
+     * _preferred_child logic might fail. We probably need to move the datapoints from the old service to the new service
+  * What happens when a service moved from component A to B?
+     * a new component relation gets added to the service. The service now has relations with multiple components.
+     * should we remove the "old" component relation?
