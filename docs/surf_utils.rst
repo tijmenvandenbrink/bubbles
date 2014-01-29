@@ -22,3 +22,9 @@ Side B uniTxBytes = Side A uniRxBytes
 Side A uniTxBytes = Side B uniRxBytes
 
 This method iterates over all Saos6 devices and tries to complete the stats for the services running over it.
+
+
+create_ip_service_groups
+------------------------
+
+This function creates the IP Service Groups specified in IP_SERVICE_GROUPS in the _surf_settings.py settings file.

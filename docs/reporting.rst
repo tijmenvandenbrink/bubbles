@@ -20,3 +20,21 @@ The process to upload the statistics every month is as follows:
 2. For every parent service determine which child service data should be used using the above criteria (_preferred_child).
 3. Add the child service to the list of services to be processed by the upload_to_vers function
 
+
+LP Availability Reporting
+-------------------------
+
+The LP Availability is calculated based on CFM events and the type of LP (Unprotected, Protected, Resilient).
+
+
+IP Volume Reporting
+-------------------
+
+Currently we're getting the IP Volume statistics from the Junipers using Zenoss. We'll do a daily export of the data
+and put it into Bubbles through the RESTful API.
+
+IP Availability Reporting
+-------------------------
+
+IP availability is calculated based on ping results to customer interfaces. We'll export these events to Bubbles through
+the RESTful API.
