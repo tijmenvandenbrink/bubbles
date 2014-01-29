@@ -11,8 +11,9 @@ This project uses django-configurations and requires the below environment varia
 
     DJANGO_CONFIGURATION=Dev|Prod
     DJANGO_SECRET_KEY="Specify your key here"
-    BUBBLES_DATABASE_URL="mysql://username:password@localhost:3306/db"
+    DJANGO_ALLOWED_HOSTS="example.com"
     DJANGO_SETTINGS_MODULE="bubbles.settings.settings"
+    BUBBLES_DATABASE_URL="mysql://username:password@localhost:3306/db"
 
 You'll also need to change a few lines to your manage.py as described here:
 

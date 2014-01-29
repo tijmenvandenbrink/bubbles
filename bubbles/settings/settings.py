@@ -108,6 +108,7 @@ class Base(Configuration):
     THIRD_PARTY_APPS = (
         'south',
         'taggit',
+        'gunicorn',
     )
 
     LOCAL_APPS = (
@@ -236,6 +237,8 @@ class Prod(Base):
     )
 
     MANAGERS = ADMINS
+
+    ALLOWED_HOSTS = values.ListValue(['example.com'])
 
     ########## INSTALLED_APPS
     INSTALLED_APPS = Base.INSTALLED_APPS
