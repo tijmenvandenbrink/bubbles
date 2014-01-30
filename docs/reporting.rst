@@ -24,7 +24,8 @@ The process to upload the statistics every month is as follows:
 LP Availability Reporting
 -------------------------
 
-The LP Availability is calculated based on CFM events and the type of LP (Unprotected, Protected, Resilient).
+The LP Availability is calculated based on CFM events and the type of LP (Unprotected, Protected, Resilient). These
+events are retrieved from the OneControl database through an ODBC interface.
 
 
 IP Volume Reporting

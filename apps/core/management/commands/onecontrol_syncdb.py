@@ -3,7 +3,7 @@ import logging
 import pandas.io.sql as psql
 import numpy as np
 from optparse import make_option
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
@@ -583,7 +583,10 @@ class Command(BaseCommand):
     help = ("Fetches data from OneControl and imports it into the Bubbles database."
             "date format: YYYY-MM-DD ")
 
-    def handle(self, date, *args, **options):
+    def handle(self, date=(datetime.today().replace(hour=0, minute=0, second=0) - timedelta(1)).replace(tzinfo=utc), *args, **options):
+        if type(date) is str:
+            date = mkdate(date)
+
         if options['sync_devices']:
             logger.info('action="Skip syncing devices from OneControl with Bubbles"')
         else:
@@ -595,18 +598,18 @@ class Command(BaseCommand):
             logger.info('action="Skip syncing port volume from OneControl"')
         else:
             logger.debug('action="Syncing port volume from OneControl"')
-            get_port_volume(mkdate(date))
+            get_port_volume(date)
             logger.debug('action="Synced port volume from OneControl", status="OK", component="port_volume"')
 
         if options['skip_service_volume']:
             logger.info('action="Skip syncing service volume from OneControl"')
         else:
             logger.info('action="Syncing service volume from OneControl"')
-            get_service_volume(mkdate(date))
+            get_service_volume(date)
             logger.debug('action="Synced service volume from OneControl", status="OK", component="service_volume"')
 
         if options['fix_missing_datapoints']:
             logger.info('action="Fix missing datapoints on SAOS6 devices"')
-            start = mkdate(date)
+            start = date
             end = start + timedelta(days=1)
             fix_missing_datapoints_saos6(start, end)

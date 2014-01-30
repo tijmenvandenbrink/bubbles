@@ -170,7 +170,7 @@ Sync with SURFnet Customer Database
 
 .. code-block:: console
 
-    django-admin.py surf_syncdb
+    python manage.py surf_syncdb
 
 
 Sync with Ciena OneControl
@@ -178,7 +178,7 @@ Sync with Ciena OneControl
 
 .. code-block:: console
 
-    django-admin.py onecontrol_syncdb
+    python manage.py onecontrol_syncdb YYYY-MM-DD
 
 
 Import legacy SURFnet Volume Reports
@@ -186,7 +186,7 @@ Import legacy SURFnet Volume Reports
 
 .. code-block:: console
 
-    django-admin.py surf_legacy_import <filename> <filename2> ...
+    python manage.py surf_legacy_import <filename> <filename2> ...
 
 
 Upload to SURFnet VERS
@@ -194,7 +194,7 @@ Upload to SURFnet VERS
 
 .. code-block:: console
 
-    django-admin.py upload2vers <YYYY-MM>
+    python manage.py upload2vers YYYY-MM
 
 
 Todo

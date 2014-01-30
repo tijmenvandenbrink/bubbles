@@ -108,7 +108,6 @@ class Base(Configuration):
     THIRD_PARTY_APPS = (
         'south',
         'taggit',
-        'gunicorn',
     )
 
     LOCAL_APPS = (
@@ -134,6 +133,37 @@ class Base(Configuration):
     DEBUG = values.BooleanValue(True)
 
     LOG_ROOT = join(BASE_DIR, 'log')
+
+    ########## CELERY
+    BROKER_URL = 'amqp://'
+    CELERY_RESULT_BACKEND = 'amqp://'
+    CELERY_TASK_RESULT_EXPIRES=3600
+
+    from datetime import timedelta
+    from celery.schedules import crontab
+
+    CELERYBEAT_SCHEDULE = {
+        # Executes onecontrol sync_devices every 30 minutes
+        'onecontrol_sync_devices': {
+        'task': 'apps.core.tasks.onecontrol_sync_devices',
+        'schedule': timedelta(seconds=1800),
+        },
+         # Executes every night at 3:00 A.M
+        'onecontrol_get_port_volume': {
+        'task': 'apps.core.tasks.onecontrol_get_port_volume',
+        'schedule': crontab(hour=3),
+        },
+        # Executes every night at 4:00 A.M
+        'onecontrol_get_service_volume': {
+        'task': 'apps.core.tasks.onecontrol_get_service_volume',
+        'schedule': crontab(hour=4),
+        },
+        # Executes every night at 2:00 A.M
+        'surf_syncdb': {
+        'task': 'apps.core.tasks.surf_syncdb',
+        'schedule': crontab(hour=2),
+        },
+    }
 
 
 class Dev(Base):

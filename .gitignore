@@ -29,3 +29,6 @@ Thumbs.db
 
 # Docs
 docs/_build
+
+# Celerybeat schedule
+celerybeat-schedule
