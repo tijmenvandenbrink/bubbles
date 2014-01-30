@@ -165,6 +165,12 @@ class Base(Configuration):
         },
     }
 
+    # Where to chdir at start.
+    CELERYBEAT_CHDIR=BASE_DIR
+
+    # Extra arguments to celerybeat
+    CELERYBEAT_OPTS="--schedule={}/run/celerybeat-schedule".format(BASE_DIR)
+
 
 class Dev(Base):
     DEBUG = True
