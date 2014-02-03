@@ -15,7 +15,7 @@ from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
 from ....core.utils import mkdate, update_obj
-from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos6
+from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos6, create_parent_services
 
 logger = logging.getLogger(__name__)
 
@@ -314,30 +314,6 @@ def get_service_volume(period):
     :type period: datetime.date
     """
 
-    def _get_or_create_parent_service(service_id):
-        service_info = get_service_info_from_string(service_id)
-        parent_service_id = "{}{}".format(service_info['service_id'], service_info['service_type'])
-        service, created = Service.objects.get_or_create(service_id=parent_service_id,
-                                                         description="{} Parent Service".format(parent_service_id),
-                                                         defaults={'name': parent_service_id,
-                                                                   'service_type': ServiceType.objects.get(
-                                                                       name=SERVICE_TYPE_MAP[
-                                                                           service_info.get('service_type')]),
-                                                                   'status': ServiceStatus.objects.get(
-                                                                       name='Production'),
-                                                                   'report_on': True})
-
-        if created is True:
-            logger.info('action="Parent service created" status="OK", component="service", '
-                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
-                        'service_status="{svc.status}").'.format(svc=service))
-        else:
-            logger.info('action="Parent service exists" status="OK", component="service", '
-                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
-                        'service_status="{svc.status}").'.format(svc=service))
-
-        return service, created
-
     def _create_query(period, metric):
         """ Returns the SQL query to get port volume data from OneControl
         As data might be scattered over 3 different tables we have to query all 3.
@@ -414,21 +390,13 @@ def get_service_volume(period):
             for service_id in df2['VS'].unique():
                 service_info = get_service_info_from_string(service_id)
                 # Only sync services defined in SYNC_SERVICE_TYPES
-                if not service_info.get('service_type') in SYNC_SERVICE_TYPES:
+                if not service_info.get('service_type', 'Unknown') in SYNC_SERVICE_TYPES:
                     logger.debug('action="Check service type sync property", status="False", result="Service type not '
                                  'in SYNC_SERVICE_TYPES. Ignoring it" component="service", service_id="{}", '
                                  'service_type="{}"'.format(service_id, service_info.get('service_type')))
                     continue
 
-                parent_service, parent_created = _get_or_create_parent_service(service_id)
-
                 df3 = df2[df2.VS == service_id]
-                logger.info('action="Unique components in dataframe", status="OK", component="service",'
-                            'parent_service="{}", service_id="{}", components="{}"'.format(service_id,
-                                                                                           len(df3[
-                                                                                               'PORTFORMALNAME'].unique()),
-                                                                                           parent_service.name))
-
                 for component in df3['PORTFORMALNAME'].unique():
                     comp, created = Component.objects.get_or_create(name=component, device=dev)
                     if created is True:
@@ -468,14 +436,6 @@ def get_service_volume(period):
                                 'component_name="{comp.name}", service_name="{svc.name}", '
                                 'service_id="{svc.service_id}",service_type="{svc.service_type}", '
                                 'service_status="{svc.status}").'.format(comp=comp, svc=service))
-
-                    parent_service.sub_services.add(service)
-                    parent_service.save()
-                    logger.info('action="Service add", status="Added", component="service",'
-                                'parent_service="{psvc.description}", service_name="{svc.name}", '
-                                'service_id="{svc.service_id}", service_type="{svc.service_type}", '
-                                'service_status="{svc.status}").'.format(psvc=parent_service,
-                                                                         svc=service))
                     service.save()
 
                     df4 = df3[df3.PORTFORMALNAME == component]
@@ -547,6 +507,8 @@ def get_service_volume(period):
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             except ValueError:
                 logger.error('action="Constructing query", status="Failed", result="No tables exist"')
+
+        create_parent_services()
 
     _run()
 

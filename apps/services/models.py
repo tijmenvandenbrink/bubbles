@@ -54,7 +54,7 @@ class Service(Timestamped):
         2. If both services run on saos7 devices choose the service running on the device first in alphabetical order
         3. If neither runs on saos7 devices choose the service running on the saos6 device first in alphabetical order
 
-        This function is used to work around an issue with Ciena saos6 software version not collecting uniTxBytes
+        This method is used to work around an issue with Ciena saos6 software version not collecting uniTxBytes.
         """
         if not self.sub_services:
             raise Service.DoesNotExist

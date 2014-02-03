@@ -7,6 +7,7 @@ import urllib2
 import calendar
 import logging
 from optparse import make_option
+import re
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Sum
@@ -129,10 +130,10 @@ def upload_to_vers(period, services, datasources, dry):
                              'service_status="{svc.status}", datasource_name="{ds.name}", '
                              'period="{period.year}-{period.month}").'.format(result=result, svc=service, ds=ds, period=period))
 
-            for org in service.organization.all():
-                if dry:
-                    continue
+            if dry:
+                continue
 
+            for org in service.organization.all():
                 result = client.insert_report(VERS_WSDL_URLS[service.service_type.name]['username'], # todo VERS_WSDL_URLS
                                               VERS_WSDL_URLS[service.service_type.name]['password'],
                                               Value=Decimal(result['total'] / 1e+9).quantize(Decimal('.01'),
@@ -308,15 +309,24 @@ class Command(BaseCommand):
         def ip_volume():
             create_ip_service_groups()
             populate_ip_service_groups()
-            upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name__startswith='IP'
+            # Customer services Volume stats
+            upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name='IP Interface'
             ), DataSource.objects.filter(name__contains='Volume'), options['dry'])
             logger.info("Finished ip volume upload")
 
         def lp_volume():
             services = []
-            for service in Service.objects.filter(report_on=True, service_type__name__contains='LP',
+            for service in Service.objects.filter(report_on=True, service_type__name__startswith='Static LP',
                                                   description__contains='Parent'):
+
+                # At this moment we don't want to include the parent (e.g. 2020LR) but only the
+                # childservices (e.g. 2020LR1, 2020LR2)
+                if service.service_type == 'Static LP (Resilient)':
+                    if not re.match(r'\d{4}LR\d+', service.name):
+                        continue
+
                 services.append(service._preferred_child)
+
             upload_to_vers(mkdate(period), services, DataSource.objects.filter(name__contains='Volume'), options['dry'])
             logger.info("Finished lp volume upload")
 

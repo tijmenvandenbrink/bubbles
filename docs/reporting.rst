@@ -20,6 +20,21 @@ The process to upload the statistics every month is as follows:
 2. For every parent service determine which child service data should be used using the above criteria (_preferred_child).
 3. Add the child service to the list of services to be processed by the upload_to_vers function
 
+           Redundant Services                           Single/Protected Services
+
+              2118LR Parent                                    2020LE Parent
+            /               \                                   /          \
+   2118LR1 Parent        2118LR2 Parent                     2020LE        2020LE
+      /      \             /       \
+  2118LR1  2118LR1      2118LR2  2118LR2
+
+
+       Dynamic LightPath services
+
+              DLP-000000045
+
+
+
 
 LP Availability Reporting
 -------------------------

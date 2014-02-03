@@ -151,17 +151,17 @@ class Base(Configuration):
          # Executes every night at 3:00 A.M
         'onecontrol_get_port_volume': {
         'task': 'apps.core.tasks.onecontrol_get_port_volume',
-        'schedule': crontab(hour=3),
+        'schedule': crontab(hour=3, minute=0),
         },
         # Executes every night at 4:00 A.M
         'onecontrol_get_service_volume': {
         'task': 'apps.core.tasks.onecontrol_get_service_volume',
-        'schedule': crontab(hour=4),
+        'schedule': crontab(hour=4, minute=0),
         },
         # Executes every night at 2:00 A.M
         'surf_syncdb': {
         'task': 'apps.core.tasks.surf_syncdb',
-        'schedule': crontab(hour=2),
+        'schedule': crontab(hour=2, minute=0),
         },
     }
 

@@ -89,20 +89,18 @@ def get_service_info_from_string(service_id):
     """
     import re
 
+    # Match LP/IP service ids
     m = re.match(r"(?P<service_id>\d{4})(?P<service_type>\w{2})(?P<seq>\d*)(?P<suffix>\S*)", service_id)
-    result = {'service_id': 'Unknown',
-              'service_type': 'Unknown',
-              'seq': 'Unknown',
-              'suffix': 'Unknown'
-    }
+
+    # Match DLP service ids
+    dlp = re.match(r"(?P<service_type>DLP)-(?P<service_id>\d+)", service_id)
 
     if m:
         result = m.groupdict()
-        for k, v in result.items():
-            if v == '':
-                result[k] = 'Unknown'
-
-        return result
+    elif dlp:
+        result = dlp.groupdict()
+    else:
+        result = {}
 
     return result
 
@@ -315,3 +313,56 @@ def calc_availability(start, end, duration):
     result = (1.0 - (duration.total_seconds() / total.total_seconds())) * 100
 
     return result
+
+
+def create_parent_services():
+    """ Create parent services for services in SERVICE_TYPES_WITH_PARENT
+
+    """
+    from apps.services.models import Service, ServiceStatus
+    from apps.core.management.commands._surf_settings import SERVICE_TYPE_MAP, SERVICE_TYPES_WITH_PARENT
+
+    def _get_or_create_parent_service(service):
+        """ Create a parent service based on the service name
+
+        :param service: service name
+        :type service: string
+        :returns: service, created
+        """
+
+        service_info = get_service_info_from_string(service)
+        parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
+        service, created = Service.objects.get_or_create(service_id=parent_service_id,
+                                                         description="{} Parent Service".format(parent_service_id),
+                                                         defaults={'name': parent_service_id,
+                                                                   'service_type': ServiceType.objects.get(
+                                                                       name=SERVICE_TYPE_MAP[
+                                                                           service_info.get('service_type')]),
+                                                                   'status': ServiceStatus.objects.get(
+                                                                       name='Production'),
+                                                                   'report_on': True})
+
+        if created is True:
+            logger.info('action="Create Parent service" status="Created", component="service", '
+                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}").'.format(svc=service))
+        else:
+            logger.info('action="Create Parent service" status="ServiceExists", component="service", '
+                        'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                        'service_status="{svc.status}").'.format(svc=service))
+
+        return service, created
+
+    for service in Service.objects.all():
+        if not service.service_type.name in SERVICE_TYPES_WITH_PARENT:
+            continue
+
+        parent_service, parent_created = _get_or_create_parent_service(service.name)
+        parent_service.sub_services.add(service)
+        parent_service.save()
+        logger.info('action="Service add", status="Added", component="service",'
+                    'parent_service="{psvc.description}", service_name="{svc.name}", '
+                    'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                    'service_status="{svc.status}").'.format(psvc=parent_service, svc=service))
+
+    logger.info('action="Create Parent Services", status="OK"')
