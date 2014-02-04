@@ -15,7 +15,7 @@ from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
 from ....core.management.commands._surf_settings import *
 from ....core.utils import mkdate, update_obj
-from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos6, create_parent_services
+from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos6
 
 logger = logging.getLogger(__name__)
 
@@ -507,8 +507,6 @@ def get_service_volume(period):
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             except ValueError:
                 logger.error('action="Constructing query", status="Failed", result="No tables exist"')
-
-        create_parent_services()
 
     _run()
 

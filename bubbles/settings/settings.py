@@ -163,6 +163,11 @@ class Base(Configuration):
         'task': 'apps.core.tasks.surf_syncdb',
         'schedule': crontab(hour=2, minute=0),
         },
+        # Executes every night at 5:00 A.M
+        'bubbles_create_parents_services': {
+        'task': 'apps.core.tasks.bubbles_create_parent_services',
+        'schedule': crontab(hour=5, minute=0),
+        },
     }
 
     # Where to chdir at start.
