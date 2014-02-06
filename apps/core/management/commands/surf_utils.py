@@ -377,6 +377,7 @@ def create_parent_services():
                 parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
                 pp_service, created = _get_or_create_parent_service(parent_service, parent_service_id)
                 pp_service.report_on = False
+                pp_service.save()
                 continue
 
         _get_or_create_parent_service(service, parent_service_id)
