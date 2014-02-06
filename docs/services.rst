@@ -5,6 +5,7 @@ Service Types
 -------------
 
 * Customer Service Types
+
   - IP Unprotected
   - IP Protected
   - IP Resilient
@@ -15,10 +16,13 @@ Service Types
   - Dynamic LP (Protected)
   - Dynamic LP (Resilient)
   - VLAN
+
 * Tunnel types
+
   - Tunnel Unprotected
   - Tunnel Protected
   - Tunnel Dual-homed
+
 * Port types
   - LAG
   - Port
