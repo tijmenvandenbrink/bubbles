@@ -24,6 +24,7 @@ Service Types
   - Tunnel Dual-homed
 
 * Port types
+
   - LAG
   - Port
 

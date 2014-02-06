@@ -372,6 +372,7 @@ def create_parent_services():
                 parent_service_id = "{}{}{}".format(service_info.get('service_id'), service_info.get('service_type'),
                                                     service_info.get('seq', ''))
                 parent_service, parent_created = _get_or_create_parent_service(service, parent_service_id)
+                parent_service.report_on = False
 
                 # set parent_service_id for adding parents parent
                 parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
