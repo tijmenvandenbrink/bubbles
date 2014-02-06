@@ -307,24 +307,30 @@ class Command(BaseCommand):
         :type period: string
         """
         def ip_volume():
+            # External interfaces
             create_ip_service_groups()
             populate_ip_service_groups()
-            # Customer services Volume stats
-            upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name='IP Interface'
-            ), DataSource.objects.filter(name__contains='Volume'), options['dry'])
+            services = []
+            for group in IP_SERVICE_GROUPS.keys():
+                try:
+                    services.append(Service.objects.get(service_id=group))
+                except Service.DoesNotExist:
+                    logger.error('action="Get External IP Interface Groups", status="Failed", '
+                                 'result="External Interface Group will not be reported on", group="{}"'.format(group))
+                    continue
+
+            upload_to_vers(mkdate(period), services, DataSource.objects.filter(name__contains='Volume'), options['dry'])
+
+            # Customer services
+            upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name='IP Interface'),
+                           DataSource.objects.filter(name__contains='Volume'), options['dry'])
+
+
             logger.info("Finished ip volume upload")
 
         def lp_volume():
             services = []
-            for service in Service.objects.filter(report_on=True, service_type__name__startswith='Static LP',
-                                                  description__contains='Parent'):
-
-                # At this moment we don't want to include the parent (e.g. 2020LR) but only the
-                # childservices (e.g. 2020LR1, 2020LR2)
-                if service.service_type == 'Static LP (Resilient)':
-                    if not re.match(r'\d{4}LR\d+', service.name):
-                        continue
-
+            for service in Service.objects.filter(report_on=True, service_type__name__startswith='Static LP'):
                 services.append(service._preferred_child)
 
             upload_to_vers(mkdate(period), services, DataSource.objects.filter(name__contains='Volume'), options['dry'])

@@ -116,7 +116,7 @@ def create_ip_service_groups():
         service, created = Service.objects.get_or_create(service_id=k,
                                                          defaults={'name': v, 'description': v,
                                                                    'service_type': ServiceType.objects.get(
-                                                                       name='Group'),
+                                                                       name='IP External'),
                                                                    'status': ServiceStatus.objects.get(
                                                                        name='Production'),
                                                          }
@@ -127,9 +127,9 @@ def create_ip_service_groups():
                         'service_name="{svc.name}", service_id="{svc.service_id}", '
                         'service_type="{svc.service_type}", service_status="{svc.status}").'.format(svc=service))
         else:
-            logger.info('action="Service create", status="Exists", component="service", '
-                        'service_name="{svc.name}", service_id="{svc.service_id}", '
-                        'service_type="{svc.service_type}", service_status="{svc.status}").'.format(svc=service))
+            logger.debug('action="Service create", status="Exists", component="service", '
+                         'service_name="{svc.name}", service_id="{svc.service_id}", '
+                         'service_type="{svc.service_type}", service_status="{svc.status}").'.format(svc=service))
 
 
 def populate_ip_service_groups():
@@ -141,7 +141,7 @@ def populate_ip_service_groups():
 
     for k, v in IP_SERVICE_GROUPS.items():
         psvc = Service.objects.get(service_id=k)
-        psvc.sub_services.add(*Service.objects.filter(service_type__name__contains='IP', description__contains=v))
+        psvc.sub_services.add(*Service.objects.filter(service_type__name__contains='IP', description__icontains=v))
 
 
 def fix_missing_datapoints_saos6(start, end, copy=True):
