@@ -167,7 +167,6 @@ def get_port_volume(period):
                 tables.append(table)
 
         if len(tables) == 0:
-            logger.warning('action="Constructing query", status="Failed", result="No tables exist"')
             raise ValueError("No tables exist")
 
         i = 1
@@ -302,7 +301,7 @@ def get_port_volume(period):
                 df = get_dataframe(query)
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             except ValueError:
-                logger.error('action="Constructing query", status="Failed", result="No tables exist"')
+                logger.error('action="Constructing query", status="Failed", result="No tables exist", table="PORTSTATS"')
 
     _run()
 
@@ -335,7 +334,6 @@ def get_service_volume(period):
                 tables.append(table)
 
         if len(tables) == 0:
-            logger.warning('action="Constructing query", status="Failed", result="No tables exist"')
             raise ValueError("No tables exist")
 
         i = 1
@@ -506,7 +504,9 @@ def get_service_volume(period):
                 df = get_dataframe(query)
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
             except ValueError:
-                logger.error('action="Constructing query", status="Failed", result="No tables exist"')
+                logger.error('action="Constructing query", status="Failed", result="No tables exist", '
+                             'table="SERVICEENDPOINTSTATS"')
+
 
     _run()
 
