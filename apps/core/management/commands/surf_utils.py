@@ -319,28 +319,26 @@ def create_parent_services():
     """ Create parent services for services in SERVICE_TYPES_WITH_PARENT
 
     """
+    import re
     from apps.services.models import Service, ServiceStatus
     from apps.core.management.commands._surf_settings import SERVICE_TYPE_MAP, SERVICE_TYPES_WITH_PARENT
 
-    def _get_or_create_parent_service(service):
+    def _get_or_create_parent_service(service, parent_service_id):
         """ Create a parent service based on the service name
 
         :param service: service name
         :type service: string
         :returns: service, created
         """
-
-        service_info = get_service_info_from_string(service)
-        parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
-        service, created = Service.objects.get_or_create(service_id=parent_service_id,
-                                                         description="{} Parent Service".format(parent_service_id),
-                                                         defaults={'name': parent_service_id,
-                                                                   'service_type': ServiceType.objects.get(
-                                                                       name=SERVICE_TYPE_MAP[
-                                                                           service_info.get('service_type')]),
-                                                                   'status': ServiceStatus.objects.get(
-                                                                       name='Production'),
-                                                                   'report_on': True})
+        p_service, created = Service.objects.get_or_create(service_id=parent_service_id,
+                                                           description="{} Parent Service".format(parent_service_id),
+                                                           defaults={'name': parent_service_id,
+                                                                     'service_type': ServiceType.objects.get(
+                                                                         name=SERVICE_TYPE_MAP[
+                                                                             service_info.get('service_type')]),
+                                                                     'status': ServiceStatus.objects.get(
+                                                                         name='Production'),
+                                                                     'report_on': True})
 
         if created is True:
             logger.info('action="Create Parent service" status="Created", component="service", '
@@ -351,18 +349,35 @@ def create_parent_services():
                         'service_name="{svc.name}", service_id="{svc.service_id}", service_type="{svc.service_type}", '
                         'service_status="{svc.status}").'.format(svc=service))
 
-        return service, created
-
-    for service in Service.objects.all():
-        if not service.service_type.name in SERVICE_TYPES_WITH_PARENT:
-            continue
-
-        parent_service, parent_created = _get_or_create_parent_service(service.name)
-        parent_service.sub_services.add(service)
-        parent_service.save()
+        p_service.sub_services.add(service)
+        p_service.save()
         logger.info('action="Service add", status="Added", component="service",'
                     'parent_service="{psvc.description}", service_name="{svc.name}", '
                     'service_id="{svc.service_id}", service_type="{svc.service_type}", '
-                    'service_status="{svc.status}").'.format(psvc=parent_service, svc=service))
+                    'service_status="{svc.status}").'.format(psvc=p_service, svc=service))
 
-    logger.info('action="Create Parent Services", status="OK"')
+        return p_service, created
+
+    # Create parents for all services that are defined in SERVICE_TYPES_WITH_PARENT
+    for service in Service.objects.all().prefetch_related():
+        if not service.service_type.name in SERVICE_TYPES_WITH_PARENT:
+            continue
+
+        service_info = get_service_info_from_string(service.name)
+        parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
+
+        # We need to add an extra parent layer when service_type == 'Static LP (Resilient)'. See services docs.
+        if service.service_type.name == 'Static LP (Resilient)':
+            if re.match("[0-9a-fA-F]{2}([:])[0-9a-fA-F]{2}(\\1[0-9a-fA-F]{2}){4}_\d{4}LR\d?", service.service_id):
+                parent_service_id = "{}{}{}".format(service_info.get('service_id'), service_info.get('service_type'),
+                                                    service_info.get('seq', ''))
+                parent_service, parent_created = _get_or_create_parent_service(service, parent_service_id)
+
+                # set parent_service_id for adding parents parent
+                parent_service_id = "{}{}".format(service_info.get('service_id'), service_info.get('service_type'))
+                _get_or_create_parent_service(parent_service, parent_service_id)
+                continue
+
+        _get_or_create_parent_service(service, parent_service_id)
+
+    logger.info('action="Create Parent Services", status="Finished"')
