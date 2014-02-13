@@ -168,6 +168,11 @@ class Base(Configuration):
         'task': 'apps.core.tasks.bubbles_create_parent_services',
         'schedule': crontab(hour=5, minute=0),
         },
+        # Executes every night at 6:00 A.M
+        'surf_utils_fix_missing_datapoints': {
+        'task': 'apps.core.tasks.bubbles_create_parent_services',
+        'schedule': crontab(hour=6, minute=0),
+        },
     }
 
     # Where to chdir at start.

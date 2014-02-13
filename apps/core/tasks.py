@@ -7,7 +7,7 @@ from celery import shared_task
 from apps.core.management.commands.onecontrol_syncdb import sync_devices, get_port_volume, get_service_volume
 from apps.core.management.commands.surf_syncdb import SurfSoap, sync_objects
 from apps.core.management.commands._surf_settings import IDD_URLS
-from apps.core.management.commands.surf_utils import create_parent_services
+from apps.core.management.commands.surf_utils import create_parent_services, fix_missing_datapoints_saos6
 
 @shared_task(ignore_result=True)
 def onecontrol_sync_devices():
@@ -36,3 +36,9 @@ def surf_syncdb():
     for k, v in IDD_URLS.items():
         data = SurfSoap(v['url'], v['backup_file'], k).getdata()
         sync_objects(data)
+
+@shared_task(ignore_result=True)
+def surf_utils_fix_missing_datapoints():
+    start = (datetime.today().replace(hour=0, minute=0, second=0) - timedelta(1)).replace(tzinfo=utc)
+    end = datetime.today().replace(hour=0, minute=0, second=0).replace(tzinfo=utc)
+    fix_missing_datapoints_saos6(start, end)

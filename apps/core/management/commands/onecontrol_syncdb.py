@@ -166,7 +166,7 @@ def get_port_volume(period):
             if check_table_exists(table):
                 tables.append(table)
 
-        if len(tables) == 0:
+        if not len(tables):
             raise ValueError("No tables exist")
 
         i = 1
