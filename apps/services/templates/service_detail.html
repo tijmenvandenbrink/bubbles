@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load nvd3_tags %}
+
+{% block head %}
+    {# Jquery CDN : Needed when using jquery_on_ready=True #}
+    {% include_chart_jscss %}
+    {% load_chart data.charttype data.chartdata_with_date data.chartcontainer_with_date data.extra_with_date %}
+
+{% endblock %}
+
+{% block content %}
+          <ol class="breadcrumb">
+            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+            <li><a href="{% url 'apps.services.views.services_list' %}">Services</a></li>
+            <li class="active"><a href="{% url 'apps.services.views.service_detail' service.pk %}">{{ service.name }}</a></li>
+          </ol>
+          <h1 class="page-header"><i class="fa fa-cloud"></i> {{ service.name }}</h1>
+          <div class="col-md-6">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-info-circle fa-inverse fa-2x fa-fw"></i> General</h2>
+              </div>
+              <div class="panel-body">
+                  <dl class="dl-horizontal">
+                  <dt>Name</dt>
+                  <dd>{{ service.name }}</dd>
+                  <dt>Description</dt>
+                  <dd>{{ service.description }}</dd>
+                  <dt>Organization(s)</dt>
+                  <dd>{% for organization in service.organization.all %}
+                        <a href="{% url 'apps.organizations.views.organization_detail' organization.org_id %}">{{ organization.name }}</a>,
+                      {% empty %}
+                        Unknown</dd>
+                      {% endfor %}
+                  </dd>
+                  <dt>Service ID</dt>
+                  <dd>{{ service.service_id }}</dd>
+                  <dt>Type</dt>
+                  <dd>{{ service.service_type.name }}</dd>
+                  <dt>Status</dt>
+                  <dd>{{ service.status.name }}</dd>
+                  <dt>CIR</dt>
+                  <dd>{{ service.cir }}</dd>
+                  <dt>EIR</dt>
+                  <dd>{{ service.eir }}</dd>
+                  <dt>Report on</dt>
+                  <dd>{{ service.report_on }}</dd>
+                  </dl>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-cogs fa-inverse fa-2x fa-fw"></i> Components</h2>
+              </div>
+              <div class="panel-body">
+              </div>
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Speed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for component in service.component.all|dictsort:"name" %}
+                    <tr>
+                      <td><a href="{% url 'apps.components.views.component_detail' component.pk %}">{{ component.name }}</a></td>
+                      <td>{{ component.speed }}</td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+            </div>
+          </div>
+          </div>
+          <div class="col-md-12">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-cloud fa-inverse fa-2x fa-fw"></i> Subservices</h2>
+              </div>
+              <div class="panel-body">
+              </div>
+              <div class="table-responsive">
+                <table class="table table-striped">
+             <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Organization</th>
+                  <th>Service ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>CIR</th>
+                  <th>EIR</th>
+                  <th>Report On</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for s in service.sub_services.all|dictsort:"description" %}
+                <tr>
+                  <td><a href="{% url 'apps.services.views.service_detail' s.id %}">{{ s.name }}</a></td>
+                  <td>{{ s.description }}</td>
+                  <td>{% for organization in s.organization.all %}
+                      {{ organization.name }},
+                      {% empty %}
+                      Unknown</td>
+                      {% endfor %}
+                  </td>
+                  <td>{{ s.service_id }}</td>
+                  <td>{{ s.service_type.name }}</td>
+                  <td>{{ s.status.name }}</td>
+                  <td>{{ s.cir }}</td>
+                  <td>{{ s.eir }}</td>
+                  <td>{{ s.report_on }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+                </table>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-14">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-bar-chart-o fa-inverse fa-2x fa-fw"></i> Volume Statistics</h2>
+              </div>
+              <div class="panel-body">
+                {% include_container data.chartcontainer_with_date 600 900 %}
+              </div>
+          </div>
+{% endblock %}
+</body>

@@ -32,3 +32,6 @@ docs/_build
 
 # Celerybeat schedule
 celerybeat-schedule
+
+#Bower components
+bubbles/components/

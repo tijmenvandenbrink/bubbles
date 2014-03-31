@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+          <ol class="breadcrumb">
+            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+            <li><a href="{% url 'apps.organizations.views.organizations_list' %}">Organizations</a></li>
+            <li class="active"><a href="{% url 'apps.organizations.views.organization_detail' organization.pk %}">{{ organization.name }}</a></li>
+          </ol>
+          <h1 class="page-header"><i class="fa fa-building-o"></i> {{ organization.name }}</h1>
+          <div class="col-md-4">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-info-circle fa-inverse fa-2x fa-fw"></i> General</h2>
+              </div>
+              <div class="panel-body">
+                  <dl class="dl-horizontal">
+                  <dt>Name</dt>
+                  <dd>{{ organization.name }}</dd>
+                  <dt>Organization ID</dt>
+                  <dd>{{ organization.org_id }}</dd>
+                  <dt>Abbreviation</dt>
+                  <dd>{{ organization.org_abbreviation }}</dd>
+                  </dl>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-cloud fa-inverse fa-2x fa-fw"></i> Services</h2>
+              </div>
+              <div class="panel-body">
+              </div>
+              <div class="table-responsive">
+                <table class="table table-striped">
+             <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Organization</th>
+                  <th>Service ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>CIR</th>
+                  <th>EIR</th>
+                  <th>Report On</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for service in organization.service_set.all %}
+                <tr>
+                  <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
+                  <td>{{ service.description }}</td>
+                  <td>{% for organization in service.organization.all %}
+                      {{ organization.name }},
+                      {% empty %}
+                      Unknown</td>
+                      {% endfor %}
+                  </td>
+                  <td>{{ service.service_id }}</td>
+                  <td>{{ service.service_type.name }}</td>
+                  <td>{{ service.status.name }}</td>
+                  <td>{{ service.cir }}</td>
+                  <td>{{ service.eir }}</td>
+                  <td>{{ service.report_on }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+                </table>
+              </table>
+            </div>
+          </div>
+{% endblock %}

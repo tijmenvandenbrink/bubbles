@@ -34,7 +34,7 @@ class Service(Timestamped):
     description = models.CharField(max_length=200, blank=True)
     organization = models.ManyToManyField(Organization)
     service_id = models.CharField(max_length=200, unique=True)
-    sub_services = models.ManyToManyField('self', null=True, blank=True, related_name="child_services",
+    sub_services = models.ManyToManyField('self', null=True, blank=True, related_name="parent_service",
                                           symmetrical=False)
     service_type = models.ForeignKey(ServiceType)
     status = models.ForeignKey(ServiceStatus)

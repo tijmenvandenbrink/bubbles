@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+          <ol class="breadcrumb">
+            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+            <li class="active"><a href="{% url 'apps.components.views.components_list' %}">Components</a></li>
+          </ol>
+          <h1 class="page-header"><i class="fa fa-cogs"></i> Components <span class="badge badge-primary"> {{ components_list.count }}</span></h1>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Device</th>
+                  <th>Name</th>
+                  <th>Speed</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for component in components_list.all|dictsort:"device.name" %}
+                <tr>
+                  <td><a href="{% url 'apps.devices.views.device_detail' component.device.name %}">{{ component.device.name }}</a></td>
+                  <td>{{ component.name }}</td>
+                  <td>{{ component.speed }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+{% endblock %}

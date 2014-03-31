@@ -66,6 +66,7 @@ class Base(Configuration):
     STATICFILES_FINDERS = (
         'django.contrib.staticfiles.finders.FileSystemFinder',
         'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+        'djangobower.finders.BowerFinder',
         #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
     )
 
@@ -74,6 +75,11 @@ class Base(Configuration):
         'django.template.loaders.filesystem.Loader',
         'django.template.loaders.app_directories.Loader',
         #     'django.template.loaders.eggs.Loader',
+    )
+
+    TEMPLATE_CONTEXT_PROCESSORS = (
+        'django.contrib.auth.context_processors.auth',
+        'django.core.context_processors.request',
     )
 
     MIDDLEWARE_CLASSES = (
@@ -108,6 +114,9 @@ class Base(Configuration):
     THIRD_PARTY_APPS = (
         'south',
         'taggit',
+        'bootstrap3',
+        'djangobower',
+        'django_nvd3',
     )
 
     LOCAL_APPS = (
@@ -133,6 +142,19 @@ class Base(Configuration):
     DEBUG = values.BooleanValue(True)
 
     LOG_ROOT = join(BASE_DIR, 'log')
+
+
+    ########## BOOTSTRAP 3
+    BOOTSTRAP3 = {
+        'jquery_url': '//code.jquery.com/jquery.min.js',
+        'base_url': '//netdna.bootstrapcdn.com/bootstrap/3.1.1/',
+        'css_url': None,
+        'theme_url': None,
+        'javascript_url': None,
+        'horizontal_label_class': 'col-md-2',
+        'horizontal_field_class': 'col-md-4',
+    }
+
 
     ########## CELERY
     BROKER_URL = 'amqp://'
@@ -170,7 +192,7 @@ class Base(Configuration):
         },
         # Executes every night at 6:00 A.M
         'surf_utils_fix_missing_datapoints': {
-        'task': 'apps.core.tasks.bubbles_create_parent_services',
+        'task': 'apps.core.tasks.surf_utils_fix_missing_datapoints',
         'schedule': crontab(hour=6, minute=0),
         },
     }
@@ -180,6 +202,15 @@ class Base(Configuration):
 
     # Extra arguments to celerybeat
     CELERYBEAT_OPTS="--schedule={}/run/celerybeat-schedule".format(BASE_DIR)
+
+
+    ######### BOWER
+    BOWER_COMPONENTS_ROOT = join(BASE_DIR, 'components')
+
+    BOWER_INSTALLED_APPS = (
+        'd3#3.3.6',
+        'nvd3#1.1.12-beta',
+    )
 
 
 class Dev(Base):

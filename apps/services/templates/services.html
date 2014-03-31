@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+          <ol class="breadcrumb">
+            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+            <li class="active"><a href="{% url 'apps.services.views.services_list' %}">Services</a></li>
+          </ol>
+          <h1 class="page-header"><i class="fa fa-cloud"></i> Services <span class="badge badge-primary"> {{ service_list.count }}</span></h1>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Organization</th>
+                  <th>Service ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>CIR</th>
+                  <th>EIR</th>
+                  <th>Report On</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for service in service_list.all %}
+                <tr>
+                  <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
+                  <td>{{ service.description }}</td>
+                  <td>{% for organization in service.organization.all %}
+                      <a href="{% url 'apps.organizations.views.organization_detail' organization.org_id %}">{{ organization.name }}</a>,
+                      {% empty %}
+                      Unknown</td>
+                      {% endfor %}
+                  </td>
+                  <td>{{ service.service_id }}</td>
+                  <td>{{ service.service_type.name }}</td>
+                  <td>{{ service.status.name }}</td>
+                  <td>{{ service.cir }}</td>
+                  <td>{{ service.eir }}</td>
+                  <td>{{ service.report_on }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+          <ol class="breadcrumb">
+            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+            <li><a href="{% url 'apps.devices.views.devices_list' %}">Devices</a></li>
+            <li class="active"><a href="{% url 'apps.devices.views.device_detail' device.name %}">{{ device.name }}</a></li>
+          </ol>
+          <h1 class="page-header"><i class="fa fa-rocket"></i> {{ device.name }}</h1>
+          <div class="col-md-6">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-info-circle fa-inverse fa-2x fa-fw"></i> General</h2>
+              </div>
+              <div class="panel-body">
+                  <dl class="dl-horizontal">
+                  <dt>Name</dt>
+                  <dd>{{ device.name }}</dd>
+                  <dt>System Node Key</dt>
+                  <dd>{{ device.system_node_key }}</dd>
+                  <dt>PBBTE Bridge MAC</dt>
+                  <dd>{{ device.pbbte_bridge_mac }}</dd>
+                  <dt>Type</dt>
+                  <dd>{{ device.device_type }}</dd>
+                  <dt>IP Address</dt>
+                  <dd>{{ device.ip }}</dd>
+                  <dt>Software version</dt>
+                  <dd>{{ device.software_version }}</dd>
+                  <dt>Creation date</dt>
+                  <dd>{{ device.creation_date }}</dd>
+                  <dt>Last updated</dt>
+                  <dd>{{ device.last_modified }}</dd>
+                  </dl>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel panel-default panel-primary">
+              <div class="panel-heading">
+                <h2 class="panel-title"><i class="fa fa-cogs fa-inverse fa-2x fa-fw"></i> Components</h2>
+              </div>
+              <div class="panel-body">
+              </div>
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Speed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for component in device.component_set.all|dictsort:"name" %}
+                    <tr>
+                      <td><a href="{% url 'apps.components.views.component_detail' component.pk %}">{{ component.name }}</a></td>
+                      <td>{{ component.speed }}</td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </table>
+            </div>
+          </div>
+{% endblock %}

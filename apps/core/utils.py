@@ -1,4 +1,9 @@
 import logging
+from datetime import datetime
+
+from pandas import DataFrame, period_range
+import numpy as np
+from django.utils.timezone import utc
 
 logger = logging.getLogger(__name__)
 
@@ -167,3 +172,69 @@ def update_obj(obj, **kwargs):
             setattr(obj, k, v)
     obj.save()
     return obj
+
+
+def create_multibarchart(obj, datasources, freq='D'):
+    """
+        Returns a multibarchart
+    """
+    start_time = datetime.utcnow().replace(tzinfo=utc)
+    end_time = datetime.min.replace(tzinfo=utc)
+
+    tooltip_date = "%d %b %Y"
+    extra_serie = {"tooltip": {"y_start": "", "y_end": ""},
+                   "date_format": tooltip_date}
+
+    data = {}
+    for ds in datasources:
+        dps = obj.get_datapoints(ds, recursive=True)
+        if not dps.count():
+            continue
+        df = DataFrame(list(dps.values('start', 'value')))
+        df.set_index('start', inplace=True)
+        ps = df.to_period(freq=freq).groupby(level=0).sum()
+
+        if dps.order_by('start').first().start < start_time:
+            start_time = dps.order_by('start').first().start
+
+        if dps.order_by('end').last().end > end_time:
+            end_time = dps.order_by('end').last().start
+
+        data[ds] = ps
+
+    prng = period_range(start=start_time.replace(hour=0, minute=0, second=0),
+                        end=end_time.replace(hour=0, minute=0, second=0))
+    ps_total = DataFrame(index=prng)
+    columns = []
+    for ds, ps in data.items():
+        columns.append(ds.name)
+        ps_total = ps_total.join(ps, lsuffix='_left', rsuffix='_right')
+        ps_total.columns = columns
+
+    ps_total = ps_total.reindex(prng).fillna(0)
+    ps_total = ps_total.applymap(lambda x: x/1024**3)
+
+    chartdata = {}
+    i = 0
+    for ds in ps_total.columns:
+        i += 1
+        chartdata['name{}'.format(i)] = ds
+        chartdata['y{}'.format(i)] = [float(x) for x in list(ps_total[ds].values)]
+        chartdata['extra{}'.format(i)] = extra_serie
+
+    chartdata['x'] = [str(x / 10**6) for x in list(ps_total.index.to_datetime().astype(np.int64))]
+
+    data = {
+        'charttype': 'multiBarChart',
+        'chartdata_with_date': chartdata,
+        'chartcontainer_with_date': 'date_multibarchart_container',
+        'extra_with_date': {
+            'name': 'date_multibarchart_container',
+            'x_is_date': True,
+            'x_axis_format': '%d %b %Y',
+            'tag_script_js': True,
+            'jquery_on_ready': True,
+        },
+    }
+
+    return data
