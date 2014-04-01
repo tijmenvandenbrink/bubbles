@@ -325,16 +325,21 @@ class Command(BaseCommand):
             upload_to_vers(mkdate(period), Service.objects.filter(report_on=True, service_type__name='IP Interface'),
                            DataSource.objects.filter(name__contains='Volume'), options['dry'])
 
-
-            logger.info("Finished ip volume upload")
+            logger.info('action="upload to vers", result="Finished ip volume upload"')
 
         def lp_volume():
             services = []
             for service in Service.objects.filter(report_on=True, service_type__name__startswith='Static LP'):
-                services.append(service._preferred_child)
+                try:
+                    services.append(service._preferred_child)
+                except Service.DoesNotExist:
+                    logger.error('action="find preferred_child", status="Failed", component="service", '
+                                 'result="Service will not be reported on", service_name="{svc.name}", '
+                                 'service_id="{svc.service_id}", service_type="{svc.service_type}", '
+                                 'service_status="{svc.status}"'.format(svc=service))
 
             upload_to_vers(mkdate(period), services, DataSource.objects.filter(name__contains='Volume'), options['dry'])
-            logger.info("Finished lp volume upload")
+            logger.info('action="upload to vers", result="Finished lp volume upload"')
 
         if options['report_type']:
             logger.info('action="upload2vers", status="OK", report_type="{}"'.format(options['report_type']))

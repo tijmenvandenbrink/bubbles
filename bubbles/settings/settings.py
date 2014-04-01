@@ -205,7 +205,7 @@ class Base(Configuration):
 
 
     ######### BOWER
-    BOWER_COMPONENTS_ROOT = join(BASE_DIR, 'components')
+    BOWER_COMPONENTS_ROOT = join(BASE_DIR, 'static')
 
     BOWER_INSTALLED_APPS = (
         'd3#3.3.6',

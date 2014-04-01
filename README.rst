@@ -40,8 +40,8 @@ Sync the database
 
 .. code-block:: console
 
-        django-admin.py syncdb
-        django-admin.py migrate
+        python manage.py syncdb
+        python manage.py migrate
 
 Loading fixtures
 ----------------
@@ -51,14 +51,39 @@ fixtures by running:
 
 .. code-block:: console
 
-        django-admin.py loaddata
+        python manage.py loaddata
+
+Third party dependencies
+------------------------
+
+Bubbles is using D3.js library for graphs and to get the appropriate js files you'll have to install nodejs, bower
+and django-bower. Below are the commands to install it for Ubuntu 12.04 LTS.
+
+.. code-block:: console
+
+    apt-get install python-software-properties
+    apt-add-repository ppa:chris-lea/node.js
+    apt-get update
+    node.js install
+
+    apt-get install nodejs
+
+.. code-block:: console
+
+    npm install -g bower
+
+.. code-block:: console
+
+    python manage.py bower_install
+    python manage.py collectstatic
+
 
 Run
 ----
 
 .. code-block:: console
 
-        django-admin runserver 8000
+        python manage.py runserver 8000
 
 
 Settings
@@ -199,13 +224,14 @@ Upload to SURFnet VERS
 
 Todo
 ====
-  * Implement Celery Beat to schedule tasks
+
   * Develop logic to get CFM events (from OneControl) and put them into Bubbles (LP Availability)
   * Develop a consolidation function to eliminate data growth
   * Implement Django-REST-framework
   * Add IP Volume and IP Availability through REST
   * Export XML
   * service description / port description
+  * Create capacity reporting page/table
 
 Q/A
 ====
