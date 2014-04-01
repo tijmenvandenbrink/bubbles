@@ -4,7 +4,7 @@
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
             <li class="active"><a href="{% url 'apps.services.views.services_list' %}">Services</a></li>
           </ol>
-          <h1 class="page-header"><i class="fa fa-cloud"></i> Services <span class="badge badge-primary"> {{ service_list.count }}</span></h1>
+          <h1 class="page-header"><i class="fa fa-cloud"></i> Services <span class="badge badge-primary"> {{ service_list.paginator.count }}</span></h1>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
@@ -21,7 +21,7 @@
                 </tr>
               </thead>
               <tbody>
-              {% for service in service_list.all %}
+              {% for service in service_list %}
                 <tr>
                   <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
                   <td>{{ service.description }}</td>
@@ -42,4 +42,33 @@
               </tbody>
             </table>
           </div>
+            <ul class="pagination">
+                {% if service_list.has_previous %}
+                    <li><a href="?page={{ service_list.previous_page_number }}">&laquo;</a></li>
+                {%  else %}
+                    <li class="disabled"><a href="#">&laquo;</a></li>
+                {% endif %}
+
+                {% for num in service_list.leading_range %}
+                    <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endfor %}
+
+                {% for num in service_list.main_range %}
+                   {% if num != service_list.number %}
+                     <li><a href="?page={{ num }}">{{ num }}</a></li>
+                   {% else %}
+                     <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+                   {% endif %}
+                {% endfor %}
+
+                {% for num in service_list.trailing_range %}
+                    <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endfor %}
+
+                {% if service_list.has_next %}
+                    <li><a href="?page={{ service_list.next_page_number }}">&raquo;</a></li>
+                {%  else %}
+                    <li class="disabled"><a href="#">&raquo;</a></li>
+                {% endif %}
+            </ul>
 {% endblock %}
