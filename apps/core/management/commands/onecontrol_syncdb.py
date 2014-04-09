@@ -473,12 +473,13 @@ def get_service_volume(period):
                             if created is True:
                                 logger.debug('action="DataPoint create" status="Created", component="datapoint", '
                                              'datasource_name="{}", start="{}", end="{}", value="{}", service_id="{}", '
-                                             'device_name="{}"'.format(datasource.name, start, end, v, service_id, dev))
+                                             'device_name="{}"'.format(datasource.name, start, end, v,
+                                                                       service.service_id, dev))
                             else:
                                 logger.debug('action="DataPoint create" status="Exists", component="datapoint", '
                                              'datasource_name="{}", start="{}", end="{}", value="{}", service_id="{}", '
                                              'device_name="{}"'.format(datasource.name, dp.start, dp.end, dp.value,
-                                                                       service_id, dev))
+                                                                       service.service_id, dev))
                                 dp.start = start
                                 dp.end = end
                                 dp.value = v
@@ -486,13 +487,13 @@ def get_service_volume(period):
                                 logger.debug('action="DataPoint create" status="Updated", component="datapoint", '
                                              'datasource_name="{}", start="{}", end="{}", value="{}", service_id="{}", '
                                              'device_name="{}"'.format(datasource.name, dp.start, dp.end, dp.value,
-                                                                       service_id, dev))
+                                                                       service.service_id, dev))
 
                         except MultipleObjectsReturned:
                             logger.error('action="DataPoint create", status="MultipleObjectsReturned", '
                                          'datasource_name={}, result="Please remove them manually", '
                                          'component="datapoint", start="{}", end="{}", value="{}", service_id="{}", '
-                                         'device_name="{}"'.format(datasource.name, start, end, value, service_id, dev))
+                                         'device_name="{}"'.format(datasource.name, start, end, value, service.service_id, dev))
 
     def _run():
         """ Runs the port volume sync """

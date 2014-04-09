@@ -45,8 +45,11 @@
             <li><a href="#">Profile</a></li>
             <li><a href="#">Help</a></li>
           </ul>
-          <form class="navbar-form navbar-right">
-            <input type="text" class="form-control" placeholder="Search...">
+          <form class="navbar-form navbar-right" method="get" action="/search">
+          <div class="form-group">
+              <input id="id_q" type="text" class="form-control" name="q" placeholder="Search...">
+          </div>
+          <button type="submit" value="Search" class="btn btn-success"><i class="fa fa-search"></i></button>
           </form>
         </div>
       </div>

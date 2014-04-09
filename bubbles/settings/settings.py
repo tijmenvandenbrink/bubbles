@@ -117,6 +117,7 @@ class Base(Configuration):
         'bootstrap3',
         'djangobower',
         'django_nvd3',
+        'haystack',
     )
 
     LOCAL_APPS = (
@@ -211,6 +212,16 @@ class Base(Configuration):
         'd3#3.3.6',
         'nvd3#1.1.12-beta',
     )
+
+    ######### HAYSTACK
+
+    HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'haystack',
+        },
+    }
 
 
 class Dev(Base):

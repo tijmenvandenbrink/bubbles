@@ -1,6 +1,8 @@
 import logging
-from django.db import models
 import re
+
+from django.db import models
+from django.core.urlresolvers import reverse
 
 from taggit.managers import TaggableManager
 
@@ -46,6 +48,9 @@ class Service(Timestamped):
 
     def __unicode__(self):
         return "{0}".format(self.service_id)
+
+    def get_absolute_url(self):
+        return reverse('apps.services.views.service_detail', args=[str(self.id)])
 
     def _preferred_child(self):
         """ Returns the preferred child service according to the following criteria:
