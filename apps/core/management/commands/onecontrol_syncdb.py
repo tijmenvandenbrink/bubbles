@@ -20,6 +20,14 @@ from surf_utils import get_service_info_from_string, fix_missing_datapoints_saos
 logger = logging.getLogger(__name__)
 
 
+class TableDoesNotExist(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
 def check_table_exists(tablename):
     """ Checks if the table exists
 
@@ -37,11 +45,9 @@ def check_table_exists(tablename):
     if cur.fetchone()[0] == 1:
         logger.info('action="Check table exists", status="OK", result="TableExists", '
                     'table="{}"'.format(tablename))
-        return True
-
-    logger.warning('action="Check table exists", status="Failed", result="TableDoesNotExist", '
-                   'table="{}"'.format(tablename))
-    return False
+        return tablename
+    else:
+        raise TableDoesNotExist(tablename)
 
 
 def run_query(query):
@@ -163,11 +169,14 @@ def get_port_volume(period):
         tables = []
         for n in range(-1, 2):
             table = "PORTSTATS{:%-m_%-d_%Y}".format(period + timedelta(days=n))
-            if check_table_exists(table):
-                tables.append(table)
+            try:
+                tables.append(check_table_exists(table))
+            except TableDoesNotExist:
+                logger.warning('action="Check table exists", status="Failed", result="TableDoesNotExist", '
+                               'table="{}"'.format(table))
 
         if not len(tables):
-            raise ValueError("No tables exist")
+            raise TableDoesNotExist("No tables exist")
 
         i = 1
         for table in tables:
@@ -300,7 +309,7 @@ def get_port_volume(period):
                 query = _create_query(period, k)
                 df = get_dataframe(query)
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
-            except ValueError:
+            except TableDoesNotExist:
                 logger.error('action="Constructing query", status="Failed", result="No tables exist", table="PORTSTATS"')
 
     _run()
@@ -330,11 +339,14 @@ def get_service_volume(period):
         tables = []
         for n in range(-1, 2):
             table = "SERVICEENDPOINTSTATS{:%-m_%-d_%Y}".format(period + timedelta(days=n))
-            if check_table_exists(table):
-                tables.append(table)
+            try:
+                tables.append(check_table_exists(table))
+            except TableDoesNotExist:
+                logger.warning('action="Check table exists", status="Failed", result="TableDoesNotExist", '
+                               'table="{}"'.format(table))
 
-        if len(tables) == 0:
-            raise ValueError("No tables exist")
+        if not len(tables):
+            raise TableDoesNotExist("No tables exist")
 
         i = 1
         for table in tables:
@@ -504,10 +516,9 @@ def get_service_volume(period):
                 query = _create_query(period, k)
                 df = get_dataframe(query)
                 _create_datapoints_from_dataframe(df, DataSource.objects.get(name=v, interval=86400))
-            except ValueError:
+            except TableDoesNotExist:
                 logger.error('action="Constructing query", status="Failed", result="No tables exist", '
                              'table="SERVICEENDPOINTSTATS"')
-
 
     _run()
 
