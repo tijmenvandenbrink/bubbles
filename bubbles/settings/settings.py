@@ -216,13 +216,59 @@ class Base(Configuration):
     ######### HAYSTACK
 
     HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://127.0.0.1:9200/',
-        'INDEX_NAME': 'haystack',
-        },
-    }
+        'default': {
+            #'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+            'ENGINE': 'bubbles.elastic.ConfigurableElasticSearchEngine',
+            'URL': 'http://127.0.0.1:9200/',
+            'INDEX_NAME': 'haystack',
+                    },
+      }
 
+    ELASTICSEARCH_DEFAULT_ANALYZER = "snowball"
+
+    ELASTICSEARCH_INDEX_SETTINGS = {
+        'settings': {
+            "analysis": {
+                "analyzer": {
+                    "ngram_analyzer": {
+                        "type": "custom",
+                        "tokenizer": "lowercase",
+                        "filter": ["haystack_ngram"]
+                    },
+                    "edgengram_analyzer": {
+                        "type": "custom",
+                        "tokenizer": "whitespace",
+                        "filter": ["haystack_edgengram"]
+                    }
+                },
+                "tokenizer": {
+                    "haystack_ngram_tokenizer": {
+                        "type": "nGram",
+                        "min_gram": 3,
+                        "max_gram": 15,
+                    },
+                    "haystack_edgengram_tokenizer": {
+                        "type": "edgeNGram",
+                        "min_gram": 2,
+                        "max_gram": 15,
+                        "side": "front"
+                    }
+                },
+                "filter": {
+                    "haystack_ngram": {
+                        "type": "nGram",
+                        "min_gram": 3,
+                        "max_gram": 15
+                    },
+                    "haystack_edgengram": {
+                        "type": "edgeNGram",
+                        "min_gram": 4,
+                        "max_gram": 15
+                    }
+                }
+            }
+        }
+    }
 
 class Dev(Base):
     DEBUG = True
