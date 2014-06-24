@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.utils.timezone import utc
 
-from ....devices.models import Device
+from ....devices.models import Device, DeviceStatus
 from ....components.models import Component
 from ....services.models import Service, ServiceType, ServiceStatus
 from ....statistics.models import DataSource, DataPoint
@@ -122,27 +122,42 @@ def sync_devices():
              'SystemNode')
 
     rows = run_query(query)
+    devices = Device.objects.all()
 
     for row in rows:
         device, created = Device.objects.get_or_create(pbbte_bridge_mac=row[5],
                                                        defaults={'system_node_key': row[0], 'ip': row[3],
                                                                  'software_version': row[4],
-                                                                 'device_type': row[1], 'name': row[2]})
+                                                                 'device_type': row[1], 'name': row[2],
+                                                                 'status': DeviceStatus.objects.get(name='Production'),
+                                                                 },
+                                                       )
         if created is True:
             logger.info('action="Device create", status="Created", component="device", device_name="{dev.name}", '
                         'system_node_key="{dev.system_node_key}", pbbte_bridge_mac="{dev.pbbte_bridge_mac}", '
                         'device_type="{dev.device_type}", ip="{dev.ip}", '
-                        'software_version="{dev.software_version}"'.format(dev=device))
+                        'software_version="{dev.software_version}", device_status="{dev.status}"'.format(dev=device))
         else:
             logger.info('action="Device create", status="Exists", component="device", device_name="{dev.name}", '
                         'system_node_key="{dev.system_node_key}", pbbte_bridge_mac="{dev.pbbte_bridge_mac}", '
                         'device_type="{dev.device_type}", ip="{dev.ip}", '
-                        'software_version="{dev.software_version}"'.format(dev=device))
+                        'software_version="{dev.software_version}", device_status="{dev.status}"'.format(dev=device))
 
             defaults = {'system_node_key': row[0], 'ip': row[3], 'software_version': row[4],
                         'device_type': row[1], 'name': row[2]}
 
             update_obj(device, **defaults)
+
+        devices = devices.exclude(pbbte_bridge_mac=device.pbbte_bridge_mac)
+
+    for device in devices:
+        device.status = DeviceStatus.objects.get(name='Decommissioned')
+        device.save()
+        logger.info('action="Device update", status="Updated", component="device", device_name="{dev.name}", '
+                    'system_node_key="{dev.system_node_key}", pbbte_bridge_mac="{dev.pbbte_bridge_mac}", '
+                    'device_type="{dev.device_type}", ip="{dev.ip}", '
+                    'software_version="{dev.software_version}", device_status="{dev.status}"'.format(dev=device))
+
 
 
 def get_port_volume(period):
@@ -207,7 +222,8 @@ def get_port_volume(period):
             # Check to see if this device is known. If not no datapoints will be created.
             system_node_key = df2['MACADDRESS'].unique()[0]
             try:
-                dev = Device.objects.get(system_node_key=system_node_key)
+                dev = Device.objects.get(system_node_key=system_node_key,
+                                         status=DeviceStatus.objects.get(name='Production'))
             except ObjectDoesNotExist:
                 logger.error('action="Device get", status="ObjectDoesNotExist". result="Datapoints are not created for '
                              'this device.", component="device", system_node_key="{0}"'.format(system_node_key))
@@ -294,6 +310,11 @@ def get_port_volume(period):
                             logger.debug('action="DataPoint create" status="Updated", component="component", '
                                          'datasource_name="{}", start="{}", end="{}", value="{}", component_name="{}", '
                                          'device_name="{}"'.format(ds.name, dp.start, dp.end, dp.value, comp, dev))
+
+                    except ValueError:
+                        logger.error('action="DataPoint create" status="ValueError", '
+                                     'component="component", datasource_name="{}", start="{}", end="{}", value="{}", '
+                                     'component_name="{}", device_name="{}"'.format(ds.name, start, end, v, comp, dev))
 
                     except MultipleObjectsReturned:
                         logger.error('action="DataPoint create" status="MultipleObjectsReturned", '
@@ -387,7 +408,8 @@ def get_service_volume(period):
             # Check to see if this device is known. If not no datapoints will be created.
             system_node_key = df2['MACADDRESS'].unique()[0]
             try:
-                dev = Device.objects.get(system_node_key=system_node_key)
+                dev = Device.objects.get(system_node_key=system_node_key,
+                                         status=DeviceStatus.objects.get(name='Production'))
             except ObjectDoesNotExist:
                 logger.error('action="Device get", status="ObjectDoesNotExist", result="Datapoints are not created for '
                              'this device.", component="device", system_node_key="{0}"'.format(system_node_key))
@@ -500,6 +522,11 @@ def get_service_volume(period):
                                              'datasource_name="{}", start="{}", end="{}", value="{}", service_id="{}", '
                                              'device_name="{}"'.format(ds.name, dp.start, dp.end, dp.value,
                                                                        service.service_id, dev))
+
+                        except ValueError:
+                            logger.error('action="DataPoint create" status="ValueError", '
+                                         'component="component", datasource_name="{}", start="{}", end="{}", value="{}", '
+                                         'component_name="{}", device_name="{}"'.format(ds.name, start, end, v, comp, dev))
 
                         except MultipleObjectsReturned:
                             logger.error('action="DataPoint create", status="MultipleObjectsReturned", '

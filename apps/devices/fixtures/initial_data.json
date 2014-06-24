@@ -1,0 +1,50 @@
+[
+    {
+        "pk": 1,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": 1000,
+            "name": "Production"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": 500,
+            "name": "Pre-production"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": 400,
+            "name": "Test"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": 300,
+            "name": "Maintenance"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": 100,
+            "name": "Reserved"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "devices.devicestatus",
+        "fields": {
+            "conversion": -1,
+            "name": "Decommissioned"
+        }
+    }
+]

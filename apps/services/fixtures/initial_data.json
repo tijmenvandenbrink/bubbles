@@ -163,7 +163,7 @@
         "model": "services.servicestatus",
         "fields": {
             "conversion": -1,
-            "name": "Decommisioned"
+            "name": "Decommissioned"
         }
     }
 ]

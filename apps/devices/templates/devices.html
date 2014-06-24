@@ -15,6 +15,7 @@
                   <th>Device Type</th>
                   <th>IP Address</th>
                   <th>Software Version</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -26,6 +27,7 @@
                   <td>{{ device.device_type }}</td>
                   <td>{{ device.ip }}</td>
                   <td>{{ device.software_version }}</td>
+                  <td>{{ device.status.name }}</td>
                 </tr>
               {% endfor %}
               </tbody>

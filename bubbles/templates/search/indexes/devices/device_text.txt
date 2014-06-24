@@ -1,0 +1,4 @@
+{{ object.name }}
+{{ object.system_node_key }}
+{{ object.pbbte_bridge_mac }}
+{{ object.ip }}

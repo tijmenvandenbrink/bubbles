@@ -5,13 +5,25 @@ from taggit.managers import TaggableManager
 from ..core.models import Timestamped
 
 
+class DeviceStatus(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    conversion = models.IntegerField()
+
+    def __unicode__(self):
+        return "{0} ({1})".format(self.name, self.conversion)
+
+    class Meta:
+        verbose_name_plural = 'Device statuses'
+
+
 class Device(Timestamped):
     name = models.CharField(max_length=200)
-    system_node_key = models.CharField(max_length=50, unique=True)
+    system_node_key = models.CharField(max_length=50)
     pbbte_bridge_mac = models.CharField(max_length=50, unique=True)
     device_type = models.CharField(max_length=50)
     ip = models.IPAddressField()
     software_version = models.CharField(max_length=200)
+    status = models.ForeignKey(DeviceStatus)
     tags = TaggableManager(blank=True)
 
     def __unicode__(self):
