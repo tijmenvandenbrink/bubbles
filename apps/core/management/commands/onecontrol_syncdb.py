@@ -122,7 +122,7 @@ def sync_devices():
              'SystemNode')
 
     rows = run_query(query)
-    devices = Device.objects.all()
+    devices = Device.objects.all().exclude(status=DeviceStatus.objects.get(name='Decommissioned'))
 
     for row in rows:
         device, created = Device.objects.get_or_create(pbbte_bridge_mac=row[5],
