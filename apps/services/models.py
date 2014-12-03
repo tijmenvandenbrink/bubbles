@@ -34,9 +34,9 @@ class ServiceStatus(models.Model):
 class Service(Timestamped):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=200, blank=True)
-    organization = models.ManyToManyField(Organization)
+    organization = models.ManyToManyField(Organization, related_name='services')
     service_id = models.CharField(max_length=200, unique=True)
-    sub_services = models.ManyToManyField('self', null=True, blank=True, related_name="parent_service",
+    sub_services = models.ManyToManyField('self', null=True, blank=True, related_name='parent_service',
                                           symmetrical=False)
     service_type = models.ForeignKey(ServiceType)
     status = models.ForeignKey(ServiceStatus)
@@ -50,7 +50,7 @@ class Service(Timestamped):
         return "{0}".format(self.service_id)
 
     def get_absolute_url(self):
-        return reverse('apps.services.views.service_detail', args=[str(self.id)])
+        return reverse('apps.services.views.ServiceDetail', args=[str(self.id)])
 
     def _preferred_child(self):
         """ Returns the preferred child service according to the following criteria:

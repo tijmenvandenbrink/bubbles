@@ -35,3 +35,6 @@ celerybeat-schedule
 
 #Bower components
 bubbles/components/
+
+#static
+bubbles/static/

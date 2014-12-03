@@ -1,13 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import patterns
+from django.conf.urls import url
 
-urlpatterns = patterns('',
-                       # Examples:
-                       # url(r'^$', 'bubbles.views.home', name='home'),
-                       # url(r'^bubbles/', include('bubbles.foo.urls')),
-                       url(r'^$', 'apps.services.views.services_list'),
-                       url(r'(?P<pk>\d+)/$', 'apps.services.views.service_detail'),
-                       # Uncomment the admin/doc line below to enable admin documentation:
-                       # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+from apps.services.views import ServiceList, ServiceDetail
 
-                       # Uncomment the next line to enable the admin:
+urlpatterns = patterns('apps.services.views',
+                       url(r'^$', ServiceList.as_view(), name='services_list'),
+                       url(r'(?P<pk>\d+)/$', ServiceDetail.as_view(), name='service_detail'),
                        )

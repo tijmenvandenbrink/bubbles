@@ -1,28 +1,37 @@
 from django.shortcuts import render, get_object_or_404
-from django.core.paginator import PageNotAnInteger, EmptyPage
+from django.views.generic import ListView, DetailView
 
-from apps.services.models import Service
+from rest_framework import viewsets
+from braces.views import OrderableListMixin, PrefetchRelatedMixin
+from digg_paginator import DiggPaginator
+
+from apps.services.serializers import ServiceSerializer, ServiceStatusSerializer, ServiceTypeSerializer
+from apps.services.models import Service, ServiceStatus, ServiceType
 from apps.statistics.models import DataSource
 from apps.core.utils import create_multibarchart
-from apps.core.diggpaginator import DiggPaginator
 
 
-def services_list(request):
-    services = Service.objects.all().prefetch_related('organization', 'status', 'service_type').order_by('name')
+class ServiceList(OrderableListMixin, PrefetchRelatedMixin, ListView):
+    model = Service
+    prefetch_related = [u"organization", u"status", u"service_type"]
+    orderable_columns = (u"name", u"description",)
+    orderable_columns_default = u"name"
+    template_name = 'services.html'
+    context_object_name = 'service_list'
+    paginate_by = 20
+    paginator_class = DiggPaginator
 
-    paginator = DiggPaginator(services, 25, body=10, padding=2, margin=2, )
-    page = request.GET.get('page')
 
-    try:
-        service_list = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        service_list = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        service_list = paginator.page(paginator.num_pages)
+class ServiceDetail(DetailView):
+    model = Service
+    context_object_name = 'service'
+    template_name = 'service_detail.html'
 
-    return render(request, 'services.html', {"service_list": service_list})
+    def get_context_data(self, **kwargs):
+        context = super(ServiceDetail, self).get_context_data(**kwargs)
+        datasources = DataSource.objects.filter(name__contains="Volume")
+        context['data'] = create_multibarchart(self.get_object(), datasources)
+        return context
 
 
 def service_detail(request, pk):
@@ -32,3 +41,33 @@ def service_detail(request, pk):
     data = create_multibarchart(service, datasources)
 
     return render(request, 'service_detail.html', {"service": service, "data": data,})
+
+
+class ServiceViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    """
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+
+
+class ServiceStatusViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    """
+    queryset = ServiceStatus.objects.all()
+    serializer_class = ServiceStatusSerializer
+
+
+class ServiceTypeViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    """
+    queryset = ServiceType.objects.all()
+    serializer_class = ServiceTypeSerializer

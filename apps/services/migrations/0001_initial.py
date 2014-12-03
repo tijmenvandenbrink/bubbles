@@ -1,173 +1,83 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import taggit.managers
 
 
-class Migration(SchemaMigration):
-    def forwards(self, orm):
-        # Adding model 'ServiceType'
-        db.create_table('services_servicetype', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
-        ))
-        db.send_create_signal('services', ['ServiceType'])
+class Migration(migrations.Migration):
 
-        # Adding model 'ServiceStatus'
-        db.create_table('services_servicestatus', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
-            ('conversion', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal('services', ['ServiceStatus'])
+    dependencies = [
+        ('components', '0002_auto_20141202_1253'),
+        ('organizations', '0001_initial'),
+        ('taggit', '0001_initial'),
+    ]
 
-        # Adding model 'Service'
-        db.create_table('services_service', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('last_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('service_id', self.gf('django.db.models.fields.CharField')(unique=True, max_length=25)),
-            ('service_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceType'])),
-            ('status', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.ServiceStatus'])),
-            ('cir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
-            ('eir', self.gf('django.db.models.fields.BigIntegerField')(null=True, blank=True)),
-            ('report_on', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('services', ['Service'])
-
-        # Adding M2M table for field organization on 'Service'
-        db.create_table('services_service_organization', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('service', models.ForeignKey(orm['services.service'], null=False)),
-            ('organization', models.ForeignKey(orm['organizations.organization'], null=False))
-        ))
-        db.create_unique('services_service_organization', ['service_id', 'organization_id'])
-
-        # Adding M2M table for field sub_services on 'Service'
-        db.create_table('services_service_sub_services', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('from_service', models.ForeignKey(orm['services.service'], null=False)),
-            ('to_service', models.ForeignKey(orm['services.service'], null=False))
-        ))
-        db.create_unique('services_service_sub_services', ['from_service_id', 'to_service_id'])
-
-        # Adding M2M table for field component on 'Service'
-        db.create_table('services_service_component', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('service', models.ForeignKey(orm['services.service'], null=False)),
-            ('component', models.ForeignKey(orm['components.component'], null=False))
-        ))
-        db.create_unique('services_service_component', ['service_id', 'component_id'])
-
-
-    def backwards(self, orm):
-        # Deleting model 'ServiceType'
-        db.delete_table('services_servicetype')
-
-        # Deleting model 'ServiceStatus'
-        db.delete_table('services_servicestatus')
-
-        # Deleting model 'Service'
-        db.delete_table('services_service')
-
-        # Removing M2M table for field organization on 'Service'
-        db.delete_table('services_service_organization')
-
-        # Removing M2M table for field sub_services on 'Service'
-        db.delete_table('services_service_sub_services')
-
-        # Removing M2M table for field component on 'Service'
-        db.delete_table('services_service_component')
-
-
-    models = {
-        'components.component': {
-            'Meta': {'object_name': 'Component'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'device': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['devices.Device']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
-                     'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        'devices.device': {
-            'Meta': {'object_name': 'Device'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'device_type': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'ip': ('django.db.models.fields.IPAddressField', [], {'max_length': '15'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'software_version': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'system_node_key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'organizations.organization': {
-            'Meta': {'object_name': 'Organization'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
-            'org_abbreviation': ('django.db.models.fields.CharField', [], {'max_length': '25'}),
-            'org_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True'})
-        },
-        'services.service': {
-            'Meta': {'object_name': 'Service'},
-            'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'component': ('django.db.models.fields.related.ManyToManyField', [],
-                          {'symmetrical': 'False', 'to': "orm['components.Component']", 'null': 'True',
-                           'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'organization': ('django.db.models.fields.related.ManyToManyField', [],
-                             {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
-            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
-            'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
-            'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),
-            'sub_services': ('django.db.models.fields.related.ManyToManyField', [],
-                             {'blank': 'True', 'related_name': "'sub_services_rel_+'", 'null': 'True',
-                              'to': "orm['services.Service']"})
-        },
-        'services.servicestatus': {
-            'Meta': {'object_name': 'ServiceStatus'},
-            'conversion': ('django.db.models.fields.IntegerField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'services.servicetype': {
-            'Meta': {'object_name': 'ServiceType'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'taggit.tag': {
-            'Meta': {'object_name': 'Tag'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'})
-        },
-        'taggit.taggeditem': {
-            'Meta': {'object_name': 'TaggedItem'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [],
-                             {'related_name': "'taggit_taggeditem_tagged_items'",
-                              'to': "orm['contenttypes.ContentType']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
-            'tag': ('django.db.models.fields.related.ForeignKey', [],
-                    {'related_name': "'taggit_taggeditem_items'", 'to': "orm['taggit.Tag']"})
-        }
-    }
-
-    complete_apps = ['services']
+    operations = [
+        migrations.CreateModel(
+            name='Service',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('last_modified', models.DateTimeField(auto_now=True)),
+                ('creation_date', models.DateTimeField(auto_now_add=True)),
+                ('name', models.CharField(max_length=200)),
+                ('description', models.CharField(max_length=200, blank=True)),
+                ('service_id', models.CharField(unique=True, max_length=200)),
+                ('cir', models.BigIntegerField(null=True, blank=True)),
+                ('eir', models.BigIntegerField(null=True, blank=True)),
+                ('report_on', models.BooleanField(default=False)),
+                ('component', models.ManyToManyField(to='components.Component', null=True, blank=True)),
+                ('organization', models.ManyToManyField(related_name='services', to='organizations.Organization')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ServiceStatus',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(unique=True, max_length=50)),
+                ('conversion', models.IntegerField()),
+            ],
+            options={
+                'verbose_name_plural': 'Service statuses',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ServiceType',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(unique=True, max_length=50)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='service',
+            name='service_type',
+            field=models.ForeignKey(to='services.ServiceType'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='service',
+            name='status',
+            field=models.ForeignKey(to='services.ServiceStatus'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='service',
+            name='sub_services',
+            field=models.ManyToManyField(related_name='parent_service', null=True, to='services.Service', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='service',
+            name='tags',
+            field=taggit.managers.TaggableManager(to='taggit.Tag', through='taggit.TaggedItem', blank=True, help_text='A comma-separated list of tags.', verbose_name='Tags'),
+            preserve_default=True,
+        ),
+    ]

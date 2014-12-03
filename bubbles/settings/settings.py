@@ -58,7 +58,7 @@ class Base(Configuration):
     )
 
     TEMPLATE_DIRS = (
-        join(BASE_DIR, 'templates')
+        join(BASE_DIR, 'templates'),
     )
 
     # List of finder classes that know how to find static files in
@@ -112,12 +112,12 @@ class Base(Configuration):
     )
 
     THIRD_PARTY_APPS = (
-        'south',
         'taggit',
         'bootstrap3',
         'djangobower',
         'django_nvd3',
         'haystack',
+        'rest_framework'
     )
 
     LOCAL_APPS = (
@@ -144,6 +144,12 @@ class Base(Configuration):
 
     LOG_ROOT = join(BASE_DIR, 'log')
 
+
+    ########## RESTFRAMEWORK
+
+    REST_FRAMEWORK = {
+        'PAGINATE_BY': 10
+    }
 
     ########## BOOTSTRAP 3
     BOOTSTRAP3 = {

@@ -4,14 +4,14 @@
           <ul class="nav nav-stacked">
             {% url 'apps.core.views.dashboard' as dashboard_url %}
             <li {% if request.path_info == dashboard_url %}class="active"{% endif %}><a href="/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
-            {% url 'apps.organizations.views.organizations_list' as organizations_url %}
+            {% url 'organizations_list' as organizations_url %}
             <li {% if request.path_info == organizations_url %}class="active"{% endif %}><a href="{{ organizations_url }}"><i class="fa fa-building-o fa-fw"></i> Organizations</a></li>
-            {% url 'apps.devices.views.devices_list' as devices_url %}
-            <li {% if request.path_info == devices_url %}class="active"{% endif %}><a href="{% url 'apps.devices.views.devices_list' %}"><i class="fa fa-rocket fa-fw"></i> Devices</a></li>
-            {% url 'apps.components.views.components_list' as components_url %}
-            <li {% if request.path_info == components_url %}class="active"{% endif %}><a href="{% url 'apps.components.views.components_list' %}"><i class="fa fa-cogs fa-fw"></i> Components</a></li>
-            {% url 'apps.services.views.services_list' as services_url %}
-            <li {% if request.path_info == services_url %}class="active"{% endif %}><a href="{% url 'apps.services.views.services_list' %}"><i class="fa fa-cloud fa-fw"></i> Services</a></li>
+            {% url 'devices_list' as devices_url %}
+            <li {% if request.path_info == devices_url %}class="active"{% endif %}><a href="{% url 'devices_list' %}"><i class="fa fa-rocket fa-fw"></i> Devices</a></li>
+            {% url 'components_list' as components_url %}
+            <li {% if request.path_info == components_url %}class="active"{% endif %}><a href="{% url 'components_list' %}"><i class="fa fa-cogs fa-fw"></i> Components</a></li>
+            {% url 'services_list' as services_url %}
+            <li {% if request.path_info == services_url %}class="active"{% endif %}><a href="{% url 'services_list' %}"><i class="fa fa-cloud fa-fw"></i> Services</a></li>
             {% url 'apps.statistics.views.statistics_list' as statistics_url %}
             <li {% if request.path_info == statistics_url %}class="active"{% endif %}><a href="{% url 'apps.statistics.views.statistics_list' %}"><i class="fa fa-bar-chart-o fa-fw"></i> Statistics</a></li>
             {% url 'apps.events.views.events_list' as events_url %}

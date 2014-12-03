@@ -1,12 +1,45 @@
-from django.shortcuts import render, render_to_response, get_object_or_404
-from apps.devices.models import Device
+from django.views.generic import ListView, DetailView
+
+from rest_framework import viewsets
+from braces.views import OrderableListMixin
+from digg_paginator import DiggPaginator
+
+from apps.devices.models import Device, DeviceStatus
+from apps.devices.serializers import DeviceSerializer, DeviceStatusSerializer
 
 
-def devices_list(request):
-    device_list = Device.objects.all().order_by('name')
-    return render(request, 'devices.html', {"device_list": device_list})
+class DeviceList(OrderableListMixin, ListView):
+    model = Device
+    orderable_columns = (u"name", u"description",)
+    orderable_columns_default = u"name"
+    template_name = 'devices.html'
+    context_object_name = 'device_list'
+    paginate_by = 20
+    paginator_class = DiggPaginator
 
 
-def device_detail(request, device_name):
-    device = get_object_or_404(Device, name__iexact=device_name)
-    return render(request, 'device_detail.html', {"device": device})
+class DeviceDetail(DetailView):
+    model = Device
+    context_object_name = 'device'
+    template_name = 'device_detail.html'
+    slug_field = 'name'
+
+
+class DeviceStatusViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    """
+    queryset = DeviceStatus.objects.all()
+    serializer_class = DeviceStatusSerializer
+
+
+class DeviceViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    """
+    queryset = Device.objects.all()
+    serializer_class = DeviceSerializer

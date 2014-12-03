@@ -9,8 +9,8 @@ from ..services.models import Service
 
 class EventClass(models.Model):
     name = models.CharField(max_length=75)
-    parent = models.ForeignKey('self')
 
+    #Django Restframework doesn't seem to like this:
     class Meta:
         verbose_name_plural = "Event classes"
 
@@ -22,6 +22,7 @@ class EventSeverity(models.Model):
     name = models.CharField(max_length=25)
     conversion = models.IntegerField()
 
+    #Django Restframework doesn't seem to like this:
     class Meta:
         verbose_name_plural = "Event severities"
 
@@ -30,7 +31,7 @@ class EventSeverity(models.Model):
 
 
 class Event(models.Model):
-    event_class = models.ForeignKey(EventClass)
+    event_class = models.ForeignKey(EventClass, blank=True, null=True)
     severity = models.ForeignKey(EventSeverity)
     description = models.CharField(max_length=100, blank=True)
     start = models.DateTimeField()

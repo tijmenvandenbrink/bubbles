@@ -2,8 +2,8 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li><a href="{% url 'apps.components.views.components_list' %}">Components</a></li>
-            <li class="active"><a href="{% url 'apps.components.views.component_detail' component.pk %}">{{ component.name }}</a></li>
+            <li><a href="{% url 'components_list' %}">Components</a></li>
+            <li class="active"><a href="{% url 'component_detail' component.pk %}">{{ component.name }}</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-cogs"></i> {{ component.name }}</h1>
           <div class="col-md-4">
@@ -16,7 +16,7 @@
                   <dt>Name</dt>
                   <dd>{{ component.name }}</dd>
                   <dt>Device</dt>
-                  <dd><a href="{% url 'apps.devices.views.device_detail' component.device.name %}">{{ component.device.name }}</a></dd>
+                  <dd><a href="{% url 'device_detail' component.device.name %}">{{ component.device.name }}</a></dd>
                   <dt>Speed</dt>
                   <dd>{{ component.speed }}</dd>
                   </dl>
@@ -48,7 +48,7 @@
               <tbody>
               {% for service in component.service_set.all %}
                 <tr>
-                  <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
+                  <td><a href="{% url 'service_detail' service.id %}">{{ service.name }}</a></td>
                   <td>{{ service.description }}</td>
                   <td>{% for organization in service.organization.all %}
                       {{ organization.name }},

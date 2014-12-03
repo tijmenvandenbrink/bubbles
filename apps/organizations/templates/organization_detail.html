@@ -2,8 +2,8 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li><a href="{% url 'apps.organizations.views.organizations_list' %}">Organizations</a></li>
-            <li class="active"><a href="{% url 'apps.organizations.views.organization_detail' organization.pk %}">{{ organization.name }}</a></li>
+            <li><a href="{% url 'organizations_list' %}">Organizations</a></li>
+            <li class="active"><a href="{% url 'organization_detail' organization.pk %}">{{ organization.name }}</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-building-o"></i> {{ organization.name }}</h1>
           <div class="col-md-4">
@@ -46,9 +46,9 @@
                 </tr>
               </thead>
               <tbody>
-              {% for service in organization.service_set.all %}
+              {% for service in organization.services.all %}
                 <tr>
-                  <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
+                  <td><a href="{% url 'service_detail' service.pk %}">{{ service.name }}</a></td>
                   <td>{{ service.description }}</td>
                   <td>{% for organization in service.organization.all %}
                       {{ organization.name }},

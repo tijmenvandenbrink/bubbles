@@ -2,7 +2,7 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li class="active"><a href="{% url 'apps.devices.views.devices_list' %}">Devices</a></li>
+            <li class="active"><a href="{% url 'devices_list' %}">Devices</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-rocket"></i> Devices <span class="badge badge-primary"> {{ device_list.count }}</span></h1>
           <div class="table-responsive">
@@ -21,7 +21,7 @@
               <tbody>
               {% for device in device_list.all %}
                 <tr>
-                  <td><a href="{% url 'apps.devices.views.device_detail' device.name %}">{{ device.name }}</a></td>
+                  <td><a href="{% url 'device_detail' device.name %}">{{ device.name }}</a></td>
                   <td>{{ device.system_node_key }}</td>
                   <td>{{ device.pbbte_bridge_mac }}</td>
                   <td>{{ device.device_type }}</td>
@@ -33,4 +33,36 @@
               </tbody>
             </table>
           </div>
+        <div class="container" align="center">
+    <ul class="pagination pagination-sm">
+    {% if page_obj.has_previous %}
+        <li><a href="./?page={{ page_obj.previous_page_number }}">&larr;</a>
+    {% else %}
+        <li class="disabled"><a>&larr;</a>
+    {% endif %}
+
+                {% for num in page_obj.leading_range %}
+                    <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endfor %}
+
+                {% for num in page_obj.main_range %}
+                   {% if num != service_list.number %}
+                     <li><a href="?page={{ num }}">{{ num }}</a></li>
+                   {% else %}
+                     <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+                   {% endif %}
+                {% endfor %}
+
+                {% for num in page_obj.trailing_range %}
+                    <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endfor %}
+
+
+    {% if page_obj.has_next %}
+        <li><a href="./?page={{ page_obj.next_page_number }}">&rarr;</a>
+    {% else %}
+        <li class="disabled"><a>&rarr;</a>
+    {% endif %}
+    </ul>
+</div>
 {% endblock %}

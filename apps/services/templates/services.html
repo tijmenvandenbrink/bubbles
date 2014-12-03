@@ -2,7 +2,7 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li class="active"><a href="{% url 'apps.services.views.services_list' %}">Services</a></li>
+            <li class="active"><a href="{% url 'services_list' %}">Services</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-cloud"></i> Services <span class="badge badge-primary"> {{ service_list.paginator.count }}</span></h1>
           <div class="table-responsive">
@@ -23,10 +23,10 @@
               <tbody>
               {% for service in service_list %}
                 <tr>
-                  <td><a href="{% url 'apps.services.views.service_detail' service.id %}">{{ service.name }}</a></td>
+                  <td><a href="{% url 'service_detail' service.id %}">{{ service.name }}</a></td>
                   <td>{{ service.description }}</td>
                   <td>{% for organization in service.organization.all %}
-                      <a href="{% url 'apps.organizations.views.organization_detail' organization.org_id %}">{{ organization.name }}</a>,
+                      <a href="{% url 'organization_detail' organization.org_id %}">{{ organization.name }}</a>,
                       {% empty %}
                       Unknown</td>
                       {% endfor %}
@@ -42,18 +42,20 @@
               </tbody>
             </table>
           </div>
-            <ul class="pagination">
-                {% if service_list.has_previous %}
-                    <li><a href="?page={{ service_list.previous_page_number }}">&laquo;</a></li>
-                {%  else %}
-                    <li class="disabled"><a href="#">&laquo;</a></li>
-                {% endif %}
 
-                {% for num in service_list.leading_range %}
+<div class="container" align="center">
+    <ul class="pagination pagination-sm">
+    {% if page_obj.has_previous %}
+        <li><a href="./?page={{ page_obj.previous_page_number }}">&larr;</a>
+    {% else %}
+        <li class="disabled"><a>&larr;</a>
+    {% endif %}
+
+                {% for num in page_obj.leading_range %}
                     <li><a href="?page={{ num }}">{{ num }}</a></li>
                 {% endfor %}
 
-                {% for num in service_list.main_range %}
+                {% for num in page_obj.main_range %}
                    {% if num != service_list.number %}
                      <li><a href="?page={{ num }}">{{ num }}</a></li>
                    {% else %}
@@ -61,14 +63,17 @@
                    {% endif %}
                 {% endfor %}
 
-                {% for num in service_list.trailing_range %}
+                {% for num in page_obj.trailing_range %}
                     <li><a href="?page={{ num }}">{{ num }}</a></li>
                 {% endfor %}
 
-                {% if service_list.has_next %}
-                    <li><a href="?page={{ service_list.next_page_number }}">&raquo;</a></li>
-                {%  else %}
-                    <li class="disabled"><a href="#">&raquo;</a></li>
-                {% endif %}
-            </ul>
+
+    {% if page_obj.has_next %}
+        <li><a href="./?page={{ page_obj.next_page_number }}">&rarr;</a>
+    {% else %}
+        <li class="disabled"><a>&rarr;</a>
+    {% endif %}
+    </ul>
+</div>
+
 {% endblock %}

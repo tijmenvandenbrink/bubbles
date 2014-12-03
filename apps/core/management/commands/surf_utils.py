@@ -36,7 +36,7 @@ class SurfSoap:
             except IOError:
                 self.lastupdate = 0
 
-        if (time() - self.lastupdate) > 60 * 60:
+        if (time() - self.lastupdate) > 60 * 60 * 24:
             self.loadremote()
             self.savebackup()
 

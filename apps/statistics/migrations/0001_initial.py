@@ -1,148 +1,60 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import taggit.managers
 
 
-class Migration(SchemaMigration):
-    def forwards(self, orm):
-        # Adding model 'DataSource'
-        db.create_table('statistics_datasource', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=50)),
-            ('description', self.gf('django.db.models.fields.TextField')()),
-            ('unit', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('data_type', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('interval', self.gf('django.db.models.fields.PositiveIntegerField')()),
-        ))
-        db.send_create_signal('statistics', ['DataSource'])
+class Migration(migrations.Migration):
 
-        # Adding model 'DataPoint'
-        db.create_table('statistics_datapoint', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('start', self.gf('django.db.models.fields.DateTimeField')()),
-            ('end', self.gf('django.db.models.fields.DateTimeField')()),
-            ('value', self.gf('django.db.models.fields.BigIntegerField')()),
-            ('service',
-             self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], null=True, blank=True)),
-            ('data_source', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['statistics.DataSource'])),
-        ))
-        db.send_create_signal('statistics', ['DataPoint'])
+    dependencies = [
+        ('taggit', '0001_initial'),
+        ('services', '0001_initial'),
+    ]
 
-
-    def backwards(self, orm):
-        # Deleting model 'DataSource'
-        db.delete_table('statistics_datasource')
-
-        # Deleting model 'DataPoint'
-        db.delete_table('statistics_datapoint')
-
-
-    models = {
-        'components.component': {
-            'Meta': {'object_name': 'Component'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'device': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['devices.Device']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'speed': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)",
-                     'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        'devices.device': {
-            'Meta': {'object_name': 'Device'},
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'device_type': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'ip': ('django.db.models.fields.IPAddressField', [], {'max_length': '15'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'software_version': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'system_node_key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'organizations.organization': {
-            'Meta': {'object_name': 'Organization'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
-            'org_abbreviation': ('django.db.models.fields.CharField', [], {'max_length': '25'}),
-            'org_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True'})
-        },
-        'services.service': {
-            'Meta': {'object_name': 'Service'},
-            'cir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'component': ('django.db.models.fields.related.ManyToManyField', [],
-                          {'symmetrical': 'False', 'to': "orm['components.Component']", 'null': 'True',
-                           'blank': 'True'}),
-            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'eir': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'organization': ('django.db.models.fields.related.ManyToManyField', [],
-                             {'to': "orm['organizations.Organization']", 'symmetrical': 'False'}),
-            'report_on': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'service_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '25'}),
-            'service_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceType']"}),
-            'status': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.ServiceStatus']"}),
-            'sub_services': ('django.db.models.fields.related.ManyToManyField', [],
-                             {'blank': 'True', 'related_name': "'sub_services_rel_+'", 'null': 'True',
-                              'to': "orm['services.Service']"})
-        },
-        'services.servicestatus': {
-            'Meta': {'object_name': 'ServiceStatus'},
-            'conversion': ('django.db.models.fields.IntegerField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'services.servicetype': {
-            'Meta': {'object_name': 'ServiceType'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'})
-        },
-        'statistics.datapoint': {
-            'Meta': {'object_name': 'DataPoint'},
-            'data_source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['statistics.DataSource']"}),
-            'end': ('django.db.models.fields.DateTimeField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'service': ('django.db.models.fields.related.ForeignKey', [],
-                        {'to': "orm['services.Service']", 'null': 'True', 'blank': 'True'}),
-            'start': ('django.db.models.fields.DateTimeField', [], {}),
-            'value': ('django.db.models.fields.BigIntegerField', [], {})
-        },
-        'statistics.datasource': {
-            'Meta': {'object_name': 'DataSource'},
-            'data_type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
-            'description': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'interval': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
-            'unit': ('django.db.models.fields.CharField', [], {'max_length': '20'})
-        },
-        'taggit.tag': {
-            'Meta': {'object_name': 'Tag'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'})
-        },
-        'taggit.taggeditem': {
-            'Meta': {'object_name': 'TaggedItem'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [],
-                             {'related_name': "'taggit_taggeditem_tagged_items'",
-                              'to': "orm['contenttypes.ContentType']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
-            'tag': ('django.db.models.fields.related.ForeignKey', [],
-                    {'related_name': "'taggit_taggeditem_items'", 'to': "orm['taggit.Tag']"})
-        }
-    }
-
-    complete_apps = ['statistics']
+    operations = [
+        migrations.CreateModel(
+            name='DataPoint',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('start', models.DateTimeField()),
+                ('end', models.DateTimeField()),
+                ('value', models.BigIntegerField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='DataSource',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(unique=True, max_length=50)),
+                ('description', models.TextField()),
+                ('unit', models.CharField(max_length=20)),
+                ('data_type', models.CharField(max_length=20, choices=[(b'absolute', b'Absolute'), (b'gauge', b'Gauge'), (b'derive', b'Derive'), (b'counter', b'Counter')])),
+                ('interval', models.PositiveIntegerField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='datapoint',
+            name='data_source',
+            field=models.ForeignKey(to='statistics.DataSource'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='datapoint',
+            name='service',
+            field=models.ForeignKey(blank=True, to='services.Service', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='datapoint',
+            name='tags',
+            field=taggit.managers.TaggableManager(to='taggit.Tag', through='taggit.TaggedItem', blank=True, help_text='A comma-separated list of tags.', verbose_name='Tags'),
+            preserve_default=True,
+        ),
+    ]

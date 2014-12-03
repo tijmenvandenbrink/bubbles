@@ -2,7 +2,7 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li class="active"><a href="{% url 'apps.organizations.views.organizations_list' %}">Organizations</a></li>
+            <li class="active"><a href="{% url 'organizations_list' %}">Organizations</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-building-o"></i> Organizations <span class="badge badge-primary"> {{ organization_list.count }}</span></h1>
           <div class="table-responsive">
@@ -17,7 +17,7 @@
               <tbody>
               {% for organization in organization_list.all %}
                 <tr>
-                  <td><a href="{% url 'apps.organizations.views.organization_detail' organization.org_id %}">{{ organization.name }}</a></td>
+                  <td><a href="{% url 'organization_detail' organization.org_id %}">{{ organization.name }}</a></td>
                   <td>{{ organization.org_id }}</td>
                   <td>{{ organization.org_abbreviation }}</td>
                 </tr>

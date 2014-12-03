@@ -38,8 +38,8 @@ def sync_objects(data):
                                 'organization_abbreviation="{org.org_abbreviation}"'.format(org=org))
 
                 defaults = {'name': obj['interfacenaam'], 'description': obj['omschrijving'],
-                            'service_type': ServiceType.objects.get(name='IP Interface'),
-                            'status': ServiceStatus.objects.get(name='Production'),
+                            'service_type': ServiceType.objects.get(name__iexact='IP Interface'),
+                            'status': ServiceStatus.objects.get(name__iexact='Production'),
                             'cir': 0, 'eir': obj['capaciteit_1'],
                             'report_on': True}
 

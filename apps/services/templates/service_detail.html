@@ -11,8 +11,8 @@
 {% block content %}
           <ol class="breadcrumb">
             <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li><a href="{% url 'apps.services.views.services_list' %}">Services</a></li>
-            <li class="active"><a href="{% url 'apps.services.views.service_detail' service.pk %}">{{ service.name }}</a></li>
+            <li><a href="{% url 'services_list' %}">Services</a></li>
+            <li class="active"><a href="{% url 'service_detail' service.pk %}">{{ service.name }}</a></li>
           </ol>
           <h1 class="page-header"><i class="fa fa-cloud"></i> {{ service.name }}</h1>
           <div class="col-md-6">
@@ -28,7 +28,7 @@
                   <dd>{{ service.description }}</dd>
                   <dt>Organization(s)</dt>
                   <dd>{% for organization in service.organization.all %}
-                        <a href="{% url 'apps.organizations.views.organization_detail' organization.org_id %}">{{ organization.name }}</a>,
+                        <a href="{% url 'organization_detail' organization.org_id %}">{{ organization.name }}</a>,
                       {% empty %}
                         Unknown</dd>
                       {% endfor %}
@@ -101,7 +101,7 @@
               <tbody>
               {% for s in service.sub_services.all|dictsort:"description" %}
                 <tr>
-                  <td><a href="{% url 'apps.services.views.service_detail' s.id %}">{{ s.name }}</a></td>
+                  <td><a href="{% url 'service_detail' s.id %}">{{ s.name }}</a></td>
                   <td>{{ s.description }}</td>
                   <td>{% for organization in s.organization.all %}
                       {{ organization.name }},
