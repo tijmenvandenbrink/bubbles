@@ -1,6 +1,6 @@
 from django.views.generic import ListView, DetailView
 
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from braces.views import OrderableListMixin
 from digg_paginator import DiggPaginator
 
@@ -32,6 +32,7 @@ class DeviceStatusViewSet(viewsets.ModelViewSet):
 
     """
     queryset = DeviceStatus.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = DeviceStatusSerializer
 
 
@@ -42,4 +43,5 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     """
     queryset = Device.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = DeviceSerializer

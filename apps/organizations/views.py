@@ -1,8 +1,6 @@
-from django.shortcuts import render, get_object_or_404
-
 from django.views.generic import ListView, DetailView
 from braces.views import OrderableListMixin, PrefetchRelatedMixin
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from digg_paginator import DiggPaginator
 
 from apps.organizations.models import Organization
@@ -34,4 +32,5 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
     """
     queryset = Organization.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = OrganizationSerializer

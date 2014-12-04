@@ -1,7 +1,9 @@
 from django.shortcuts import render
-from apps.events.models import Event, EventClass, EventSeverity
-from rest_framework import viewsets
+
+from rest_framework import viewsets, permissions
+
 from apps.events.serializers import EventSerializer, EventClassSerializer, EventSeveritySerializer
+from apps.events.models import Event, EventClass, EventSeverity
 
 
 def events_list(request):
@@ -25,6 +27,7 @@ class EventClassViewSet(viewsets.ModelViewSet):
 
     """
     queryset = EventClass.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EventClassSerializer
 
 
@@ -35,4 +38,5 @@ class EventViewSet(viewsets.ModelViewSet):
 
     """
     queryset = Event.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EventSerializer

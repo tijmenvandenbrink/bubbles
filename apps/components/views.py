@@ -1,7 +1,6 @@
-from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView
 
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from braces.views import OrderableListMixin
 from digg_paginator import DiggPaginator
 
@@ -25,16 +24,6 @@ class ComponentDetail(DetailView):
     template_name = 'component_detail.html'
 
 
-def components_list(request):
-    components_list = Component.objects.all().prefetch_related('device')
-    return render(request, 'components.html', {"components_list": components_list})
-
-
-def component_detail(request, component_id):
-    component = get_object_or_404(Component, pk=component_id)
-    return render(request, 'component_detail.html', {"component": component})
-
-
 class ComponentViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list`, `create`, `retrieve`,
@@ -42,4 +31,5 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
     """
     queryset = Component.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = ComponentSerializer

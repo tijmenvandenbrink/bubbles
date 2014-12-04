@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+
+from rest_framework import viewsets, permissions
 
 from apps.statistics.models import DataSource, DataPoint
 from apps.statistics.serializers import DataSourceSerializer, DataPointSerializer
@@ -16,6 +17,7 @@ class DataSourceViewSet(viewsets.ModelViewSet):
 
     """
     queryset = DataSource.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = DataSourceSerializer
 
 
@@ -26,4 +28,5 @@ class DataPointViewSet(viewsets.ModelViewSet):
 
     """
     queryset = DataPoint.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = DataPointSerializer

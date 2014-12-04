@@ -1,7 +1,6 @@
-from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView
 
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from braces.views import OrderableListMixin, PrefetchRelatedMixin
 from digg_paginator import DiggPaginator
 
@@ -34,15 +33,6 @@ class ServiceDetail(DetailView):
         return context
 
 
-def service_detail(request, pk):
-    service = get_object_or_404(Service, pk=pk)
-
-    datasources = DataSource.objects.filter(name__contains="Volume")
-    data = create_multibarchart(service, datasources)
-
-    return render(request, 'service_detail.html', {"service": service, "data": data,})
-
-
 class ServiceViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list`, `create`, `retrieve`,
@@ -50,6 +40,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
 
     """
     queryset = Service.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = ServiceSerializer
 
 
@@ -60,6 +51,7 @@ class ServiceStatusViewSet(viewsets.ModelViewSet):
 
     """
     queryset = ServiceStatus.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = ServiceStatusSerializer
 
 
@@ -70,4 +62,5 @@ class ServiceTypeViewSet(viewsets.ModelViewSet):
 
     """
     queryset = ServiceType.objects.all()
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = ServiceTypeSerializer
