@@ -1,28 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
-          <ol class="breadcrumb">
-            <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
-            <li class="active"><a href="{% url 'organizations_list' %}">Organizations</a></li>
-          </ol>
-          <h1 class="page-header"><i class="fa fa-building-o"></i> Organizations <span class="badge badge-primary"> {{ organization_list.count }}</span></h1>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
+    <ol class="breadcrumb">
+        <li><a href="{% url 'apps.core.views.dashboard' %}">Home</a></li>
+        <li class="active"><a href="{% url 'organizations_list' %}">Organizations</a></li>
+    </ol>
+    <h1 class="page-header"><i class="fa fa-building-o"></i> Organizations <span class="badge badge-primary"> {{ organization_list.count }}</span></h1>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Organization ID</th>
+                <th>Abbreviation</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for organization in organization_list.all %}
                 <tr>
-                  <th>Name</th>
-                  <th>Organization ID</th>
-                  <th>Abbreviation</th>
+                    <td><a href="{% url 'organization_detail' organization.org_id %}">{{ organization.name }}</a></td>
+                    <td>{{ organization.org_id }}</td>
+                    <td>{{ organization.org_abbreviation }}</td>
                 </tr>
-              </thead>
-              <tbody>
-              {% for organization in organization_list.all %}
-                <tr>
-                  <td><a href="{% url 'organization_detail' organization.org_id %}">{{ organization.name }}</a></td>
-                  <td>{{ organization.org_id }}</td>
-                  <td>{{ organization.org_abbreviation }}</td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="container" align="center">
+        <ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}
+                <li><a href="./?page={{ page_obj.previous_page_number }}">&larr;</a>
+                    {% else %}
+                <li class="disabled"><a>&larr;</a>
+            {% endif %}
+
+            {% for num in page_obj.leading_range %}
+                <li><a href="?page={{ num }}">{{ num }}</a></li>
+            {% endfor %}
+
+            {% for num in page_obj.main_range %}
+                {% if num != service_list.number %}
+                    <li><a href="?page={{ num }}">{{ num }}</a></li>
+                {% else %}
+                    <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% for num in page_obj.trailing_range %}
+                <li><a href="?page={{ num }}">{{ num }}</a></li>
+            {% endfor %}
+
+
+            {% if page_obj.has_next %}
+                <li><a href="./?page={{ page_obj.next_page_number }}">&rarr;</a>
+                    {% else %}
+                <li class="disabled"><a>&rarr;</a>
+            {% endif %}
+        </ul>
+    </div>
 {% endblock %}
